@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UVM 1.2 Class Reference</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='28' font-size='28'>📘</text></svg>">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body, #root { width: 100%; height: 100%; overflow: hidden; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState, useEffect, useMemo, useCallback, useRef, createContext, useContext } = React;
+
+/* ═══════════════════════════════════════════════════════════════
+   UVM 1.2 CLASS REFERENCE — V3 (Phase 3 Complete)
+   
+   Features:
+   - 30+ classes, 9 macros with full source code
+   - Interactive SVG hierarchy diagram (zoom/pan/click)
+   - Dark/Light theme toggle
+   - Navigation history (back/forward)
+   - Search with category filter tabs
+   - Code folding for functions/tasks
+   - Hover tooltips on cross-references
+   - Responsive layout with mobile drawer
+   - Keyboard shortcuts (Ctrl+K, Ctrl+B, Alt+←/→)
+   - Smooth transitions & micro-interactions
+   ═══════════════════════════════════════════════════════════════ */
+
+// ────────────────────────────────────────────────────────────────
+// Theme System
+// ────────────────────────────────────────────────────────────────
+const Ctx = createContext();
+const TH = {
+  dark: {
+    bg:"#0c0c18",sidebar:"#10102a",card:"rgba(255,255,255,0.025)",header:"#0e0e24",
+    code:"#12122c",input:"#15153a",text:"#d4d4d4",muted:"#808098",dim:"#484860",
+    border:"rgba(255,255,255,0.06)",bHov:"rgba(255,255,255,0.12)",
+    acc:"#4ec9b0",acc2:"#569cd6",kw:"#c586c0",str:"#ce9178",cmt:"#6a9955",
+    num:"#b5cea8",mac:"#dcdcaa",gold:"#e0a84c",cls:"#4ec9b0",uvm:"#9cdcfe",
+    scroll:"rgba(255,255,255,0.07)",hlBg:"rgba(78,201,176,0.08)",
+    actBg:"rgba(78,201,176,0.13)",hovBg:"rgba(255,255,255,0.03)",
+    tooltip:"#1a1a3e",shadow:"rgba(0,0,0,0.5)"
+  },
+  light: {
+    bg:"#f6f6fc",sidebar:"#eeeef8",card:"rgba(0,0,0,0.02)",header:"#e8e8f2",
+    code:"#f9f9ff",input:"#fff",text:"#1e1e2e",muted:"#606078",dim:"#9999aa",
+    border:"rgba(0,0,0,0.07)",bHov:"rgba(0,0,0,0.14)",
+    acc:"#00897b",acc2:"#1565c0",kw:"#7b1fa2",str:"#c62828",cmt:"#2e7d32",
+    num:"#0277bd",mac:"#bf360c",gold:"#e65100",cls:"#00897b",uvm:"#1565c0",
+    scroll:"rgba(0,0,0,0.08)",hlBg:"rgba(0,137,123,0.06)",
+    actBg:"rgba(0,137,123,0.1)",hovBg:"rgba(0,0,0,0.03)",
+    tooltip:"#fff",shadow:"rgba(0,0,0,0.15)"
+  }
+};
+
+// ────────────────────────────────────────────────────────────────
+// UVM Class Data (30+ classes)
+// ────────────────────────────────────────────────────────────────
+const D = {
+  uvm_void: { x:"uvm_void", p:null, cat:"Base", f:"src/base/uvm_void.svh",
+    en:"The uvm_void class is the base class for all UVM classes. Abstract class with no data members or functions, similar to a void pointer in C.",
+    zh:"uvm_void 是所有 UVM 类的基类。没有数据成员或函数的抽象类，类似 C 的 void 指针。",
+    fn:[], tk:[], pr:[],
+    src:`virtual class uvm_void;\nendclass`},
+  uvm_object: { x:"uvm_object", p:"uvm_void", cat:"Base", f:"src/base/uvm_object.svh",
+    en:"Base class for all UVM data and hierarchical classes. Provides create, copy, compare, print, pack/unpack, and record.",
+    zh:"所有 UVM 数据类和层次类的基类。提供 create、copy、compare、print、pack/unpack 和 record 功能。",
+    fn:[
+      {n:"new",s:'function new(string name = "")',d:"Creates a new uvm_object with the given name."},
+      {n:"get_name",s:"function string get_name()",d:"Returns the name of the object."},
+      {n:"get_full_name",s:"virtual function string get_full_name()",d:"Returns the full hierarchical name."},
+      {n:"get_type_name",s:"virtual function string get_type_name()",d:"Returns the type name of the object."},
+      {n:"create",s:'virtual function uvm_object create(string name = "")',d:"Creates a new object of the same type."},
+      {n:"clone",s:"virtual function uvm_object clone()",d:"Creates and returns a deep copy."},
+      {n:"copy",s:"function void copy(uvm_object rhs)",d:"Deep copies fields from rhs."},
+      {n:"compare",s:"function bit compare(uvm_object rhs, uvm_comparer comparer = null)",d:"Deep compares with rhs."},
+      {n:"print",s:"function void print(uvm_printer printer = null)",d:"Prints the object."},
+      {n:"sprint",s:"function string sprint(uvm_printer printer = null)",d:"Returns string representation."},
+      {n:"pack_bytes",s:"function int pack_bytes(ref byte unsigned stream[], input uvm_packer packer = null)",d:"Packs into byte stream."},
+      {n:"unpack_bytes",s:"function int unpack_bytes(ref byte unsigned stream[], input uvm_packer packer = null)",d:"Unpacks from byte stream."},
+    ], tk:[], pr:[],
+    src:`class uvm_object extends uvm_void;\n\n  local string m_name;\n\n  // Function: new\n  function new(string name = "");\n    m_name = name;\n  endfunction\n\n  // Function: get_name\n  function string get_name();\n    return m_name;\n  endfunction\n\n  // Function: get_full_name\n  virtual function string get_full_name();\n    return get_name();\n  endfunction\n\n  // Function: get_type_name\n  virtual function string get_type_name();\n    return "<unknown>";\n  endfunction\n\n  // Function: create\n  virtual function uvm_object create(string name = "");\n    return null;\n  endfunction\n\n  // Function: clone\n  virtual function uvm_object clone();\n    uvm_object tmp;\n    tmp = this.create(get_name());\n    if (tmp == null)\n      \\\`uvm_warning("CRFLD", "clone not implemented")\n    else\n      tmp.copy(this);\n    return tmp;\n  endfunction\n\n  // Function: copy\n  function void copy(uvm_object rhs);\n    // deep copy implementation\n  endfunction\n\n  // Function: compare\n  function bit compare(uvm_object rhs,\n                       uvm_comparer comparer = null);\n    if (comparer == null)\n      comparer = uvm_comparer::get_default();\n    return comparer.compare_object(this, rhs);\n  endfunction\n\n  // Function: print\n  function void print(uvm_printer printer = null);\n    if (printer == null)\n      printer = uvm_printer::get_default();\n    \\\`uvm_info("PRINT", sprint(printer), UVM_NONE)\n  endfunction\n\n  // Function: sprint\n  function string sprint(uvm_printer printer = null);\n    if (printer == null)\n      printer = uvm_printer::get_default();\n    return printer.emit();\n  endfunction\n\n  // Function: pack_bytes\n  function int pack_bytes(ref byte unsigned stream[],\n                          input uvm_packer packer = null);\n    // pack implementation\n  endfunction\n\n  // Function: unpack_bytes\n  function int unpack_bytes(ref byte unsigned stream[],\n                            input uvm_packer packer = null);\n    // unpack implementation\n  endfunction\n\nendclass`},
+  uvm_transaction: { x:"uvm_transaction", p:"uvm_object", cat:"Base", f:"src/base/uvm_transaction.svh",
+    en:"Root base class for UVM transactions. Adds timing and recording interfaces.",
+    zh:"UVM 事务的根基类，添加时序和记录接口。",
+    fn:[{n:"new",s:'function new(string name = "", uvm_component initiator = null)',d:"Creates a new transaction."},{n:"accept_tr",s:"function void accept_tr(time accept_time = 0)",d:"Transaction accepted."},{n:"begin_tr",s:"function integer begin_tr(time begin_time = 0)",d:"Transaction start."},{n:"end_tr",s:"function void end_tr(time end_time = 0, bit free_handle = 1)",d:"Transaction end."}],
+    tk:[], pr:[],
+    src:`class uvm_transaction extends uvm_object;\n\n  local integer m_transaction_id = -1;\n  local time begin_time = -1;\n  local time end_time = -1;\n  local uvm_component initiator;\n\n  // Function: new\n  function new(string name = "",\n               uvm_component initiator = null);\n    super.new(name);\n    this.initiator = initiator;\n  endfunction\n\n  // Function: accept_tr\n  function void accept_tr(time accept_time = 0);\n    do_accept_tr();\n  endfunction\n\n  // Function: begin_tr\n  function integer begin_tr(time begin_time = 0);\n    if (begin_time != 0)\n      this.begin_time = begin_time;\n    else\n      this.begin_time = $realtime;\n    do_begin_tr();\n    return m_transaction_id;\n  endfunction\n\n  // Function: end_tr\n  function void end_tr(time end_time = 0,\n                       bit free_handle = 1);\n    if (end_time != 0)\n      this.end_time = end_time;\n    else\n      this.end_time = $realtime;\n    do_end_tr();\n  endfunction\n\nendclass`},
+  uvm_report_object: { x:"uvm_report_object", p:"uvm_object", cat:"Reporting", f:"src/base/uvm_report_object.svh",
+    en:"Provides an interface to the UVM reporting facility. Components issue messages through this interface.",
+    zh:"提供 UVM 报告机制的接口。组件通过此接口发出各种消息。",
+    fn:[{n:"new",s:'function new(string name = "")',d:"Creates a report object."},{n:"uvm_report_info",s:"function void uvm_report_info(string id, string message, int verbosity = UVM_MEDIUM, ...)",d:"Issues info message."},{n:"uvm_report_warning",s:"function void uvm_report_warning(string id, string message, ...)",d:"Issues warning."},{n:"uvm_report_error",s:"function void uvm_report_error(string id, string message, ...)",d:"Issues error."},{n:"uvm_report_fatal",s:"function void uvm_report_fatal(string id, string message, ...)",d:"Issues fatal."},{n:"set_report_verbosity_level",s:"function void set_report_verbosity_level(int verbosity_level)",d:"Sets verbosity filter."}],
+    tk:[], pr:[],
+    src:`class uvm_report_object extends uvm_object;\n\n  uvm_report_handler m_rh;\n\n  // Function: new\n  function new(string name = "");\n    super.new(name);\n    m_rh = new("report_handler");\n  endfunction\n\n  // Function: uvm_report_info\n  virtual function void uvm_report_info(\n    string id, string message,\n    int verbosity = UVM_MEDIUM,\n    string filename = "", int line = 0);\n    m_rh.report(UVM_INFO, get_full_name(),\n                id, message, verbosity,\n                filename, line, this);\n  endfunction\n\n  // Function: uvm_report_warning\n  virtual function void uvm_report_warning(\n    string id, string message,\n    int verbosity = UVM_MEDIUM,\n    string filename = "", int line = 0);\n    m_rh.report(UVM_WARNING, get_full_name(),\n                id, message, verbosity,\n                filename, line, this);\n  endfunction\n\n  // Function: uvm_report_error\n  virtual function void uvm_report_error(\n    string id, string message,\n    int verbosity = UVM_LOW,\n    string filename = "", int line = 0);\n    m_rh.report(UVM_ERROR, get_full_name(),\n                id, message, verbosity,\n                filename, line, this);\n  endfunction\n\n  // Function: uvm_report_fatal\n  virtual function void uvm_report_fatal(\n    string id, string message,\n    int verbosity = UVM_NONE,\n    string filename = "", int line = 0);\n    m_rh.report(UVM_FATAL, get_full_name(),\n                id, message, verbosity,\n                filename, line, this);\n  endfunction\n\n  // Function: set_report_verbosity_level\n  function void set_report_verbosity_level(\n    int verbosity_level);\n    m_rh.set_verbosity_level(verbosity_level);\n  endfunction\n\nendclass`},
+  uvm_component: { x:"uvm_component", p:"uvm_report_object", cat:"Components", f:"src/base/uvm_component.svh",
+    en:"Root base class for UVM components. Provides phasing, hierarchy, configuration, reporting, transaction recording, and factory interfaces.",
+    zh:"所有 UVM 组件的根基类。提供阶段、层次结构、配置、报告、事务记录和工厂接口。",
+    fn:[{n:"new",s:"function new(string name, uvm_component parent)",d:"Creates a component."},{n:"get_parent",s:"virtual function uvm_component get_parent()",d:"Returns parent handle."},{n:"get_full_name",s:"virtual function string get_full_name()",d:"Returns full hierarchical name."},{n:"get_child",s:"function uvm_component get_child(string name)",d:"Returns child by name."},{n:"get_num_children",s:"function int get_num_children()",d:"Returns number of children."},{n:"lookup",s:"function uvm_component lookup(string name)",d:"Looks up by hierarchical name."}],
+    tk:[{n:"build_phase",s:"virtual function void build_phase(uvm_phase phase)",d:"Build phase — create and configure sub-components."},{n:"connect_phase",s:"virtual function void connect_phase(uvm_phase phase)",d:"Connect phase — connect TLM ports."},{n:"run_phase",s:"virtual task run_phase(uvm_phase phase)",d:"Run phase — implement runtime behavior."},{n:"end_of_elaboration_phase",s:"virtual function void end_of_elaboration_phase(uvm_phase phase)",d:"Called at end of elaboration."},{n:"start_of_simulation_phase",s:"virtual function void start_of_simulation_phase(uvm_phase phase)",d:"Called at start of simulation."},{n:"extract_phase",s:"virtual function void extract_phase(uvm_phase phase)",d:"Extract phase."},{n:"check_phase",s:"virtual function void check_phase(uvm_phase phase)",d:"Check phase."},{n:"report_phase",s:"virtual function void report_phase(uvm_phase phase)",d:"Report phase."},{n:"final_phase",s:"virtual function void final_phase(uvm_phase phase)",d:"Final phase."}],
+    pr:[{n:"print_enabled",d:"Whether visible during printing."}],
+    src:`class uvm_component extends uvm_report_object;\n\n  bit print_enabled = 1;\n  protected uvm_component m_parent;\n  protected uvm_component m_children[string];\n\n  // Function: new\n  function new(string name, uvm_component parent);\n    super.new(name);\n    m_parent = parent;\n    if (parent != null)\n      parent.m_children[name] = this;\n  endfunction\n\n  // Function: get_parent\n  virtual function uvm_component get_parent();\n    return m_parent;\n  endfunction\n\n  // Function: get_full_name\n  virtual function string get_full_name();\n    if (m_parent == null) return get_name();\n    return {m_parent.get_full_name(), ".", get_name()};\n  endfunction\n\n  // Function: get_child\n  function uvm_component get_child(string name);\n    if (m_children.exists(name))\n      return m_children[name];\n    return null;\n  endfunction\n\n  // Function: get_num_children\n  function int get_num_children();\n    return m_children.num();\n  endfunction\n\n  // Function: lookup\n  function uvm_component lookup(string name);\n    // hierarchical lookup\n  endfunction\n\n  //── Phasing Interface ──\n\n  // Function: build_phase\n  virtual function void build_phase(uvm_phase phase);\n  endfunction\n\n  // Function: connect_phase\n  virtual function void connect_phase(uvm_phase phase);\n  endfunction\n\n  // Task: run_phase\n  virtual task run_phase(uvm_phase phase);\n  endtask\n\n  // Function: end_of_elaboration_phase\n  virtual function void end_of_elaboration_phase(\n    uvm_phase phase);\n  endfunction\n\n  // Function: start_of_simulation_phase\n  virtual function void start_of_simulation_phase(\n    uvm_phase phase);\n  endfunction\n\n  // Function: extract_phase\n  virtual function void extract_phase(uvm_phase phase);\n  endfunction\n\n  // Function: check_phase\n  virtual function void check_phase(uvm_phase phase);\n  endfunction\n\n  // Function: report_phase\n  virtual function void report_phase(uvm_phase phase);\n  endfunction\n\n  // Function: final_phase\n  virtual function void final_phase(uvm_phase phase);\n  endfunction\n\nendclass`},
+  uvm_test: { x:"uvm_test", p:"uvm_component", cat:"Components", f:"src/base/uvm_test.svh",
+    en:"Virtual base class for user-defined tests. Starting point for the test hierarchy.",
+    zh:"用户自定义测试的虚拟基类，测试层次结构的起始点。",
+    fn:[{n:"new",s:'function new(string name = "uvm_test", uvm_component parent = null)',d:"Creates a new test."}], tk:[], pr:[],
+    src:`class uvm_test extends uvm_component;\n\n  \\\`uvm_component_utils(uvm_test)\n\n  // Function: new\n  function new(string name = "uvm_test",\n               uvm_component parent = null);\n    super.new(name, parent);\n  endfunction\n\nendclass`},
+  uvm_env: { x:"uvm_env", p:"uvm_component", cat:"Components", f:"src/base/uvm_env.svh",
+    en:"Base class for verification environments. Contains agents, scoreboards, and verification infrastructure.",
+    zh:"验证环境基类。包含 agent、scoreboard 和验证基础设施。",
+    fn:[{n:"new",s:'function new(string name = "uvm_env", uvm_component parent = null)',d:"Creates an environment."}], tk:[], pr:[],
+    src:`class uvm_env extends uvm_component;\n\n  \\\`uvm_component_utils(uvm_env)\n\n  // Function: new\n  function new(string name = "uvm_env",\n               uvm_component parent = null);\n    super.new(name, parent);\n  endfunction\n\nendclass`},
+  uvm_agent: { x:"uvm_agent", p:"uvm_component", cat:"Components", f:"src/base/uvm_agent.svh",
+    en:"Base class for agents. Encapsulates driver, sequencer, and monitor. Active or passive mode.",
+    zh:"代理基类。封装 driver、sequencer 和 monitor，支持主动/被动模式。",
+    fn:[{n:"new",s:"function new(string name, uvm_component parent)",d:"Creates an agent."},{n:"get_is_active",s:"function uvm_active_passive_enum get_is_active()",d:"Returns UVM_ACTIVE or UVM_PASSIVE."}],
+    tk:[], pr:[{n:"is_active",d:"UVM_ACTIVE or UVM_PASSIVE."}],
+    src:`class uvm_agent extends uvm_component;\n\n  \\\`uvm_component_utils(uvm_agent)\n  uvm_active_passive_enum is_active = UVM_ACTIVE;\n\n  // Function: new\n  function new(string name, uvm_component parent);\n    super.new(name, parent);\n  endfunction\n\n  // Function: get_is_active\n  function uvm_active_passive_enum get_is_active();\n    return is_active;\n  endfunction\n\n  // Function: build_phase\n  virtual function void build_phase(uvm_phase phase);\n    super.build_phase(phase);\n    void'(uvm_config_db#(int)::get(\n      this, "", "is_active", is_active));\n  endfunction\n\nendclass`},
+  uvm_driver: { x:"uvm_driver", p:"uvm_component", cat:"Components", f:"src/comps/uvm_driver.svh",
+    en:"Parameterized base for drivers. Connects to sequencer via seq_item_port to receive and drive transactions.",
+    zh:"驱动器参数化基类。通过 seq_item_port 连接 sequencer 接收并驱动事务。",
+    fn:[{n:"new",s:"function new(string name, uvm_component parent)",d:"Creates a driver."}],
+    tk:[{n:"run_phase",s:"virtual task run_phase(uvm_phase phase)",d:"Override to implement driving logic."}],
+    pr:[{n:"seq_item_port",d:"Port to receive items from sequencer."},{n:"rsp_port",d:"Analysis port for responses."}],
+    src:`class uvm_driver #(type REQ = uvm_sequence_item,\n                     type RSP = REQ)\n  extends uvm_component;\n\n  \\\`uvm_component_param_utils(uvm_driver#(REQ, RSP))\n\n  uvm_seq_item_pull_port #(REQ, RSP) seq_item_port;\n  uvm_analysis_port #(RSP) rsp_port;\n\n  // Function: new\n  function new(string name, uvm_component parent);\n    super.new(name, parent);\n    seq_item_port = new("seq_item_port", this);\n    rsp_port = new("rsp_port", this);\n  endfunction\n\n  // Task: run_phase\n  //   Override to implement driving logic.\n  //   Example:\n  //|  virtual task run_phase(uvm_phase phase);\n  //|    REQ req;\n  //|    forever begin\n  //|      seq_item_port.get_next_item(req);\n  //|      drive_item(req);\n  //|      seq_item_port.item_done();\n  //|    end\n  //|  endtask\n  virtual task run_phase(uvm_phase phase);\n    return;\n  endtask\n\nendclass`},
+  uvm_monitor: { x:"uvm_monitor", p:"uvm_component", cat:"Components", f:"src/comps/uvm_monitor.svh",
+    en:"Base class for monitors. Passively observe DUT and collect transactions.",
+    zh:"监视器基类。被动观察 DUT，收集事务。",
+    fn:[{n:"new",s:"function new(string name, uvm_component parent)",d:"Creates a monitor."}], tk:[], pr:[],
+    src:`class uvm_monitor extends uvm_component;\n\n  \\\`uvm_component_utils(uvm_monitor)\n\n  // Function: new\n  function new(string name, uvm_component parent);\n    super.new(name, parent);\n  endfunction\n\nendclass`},
+  uvm_scoreboard: { x:"uvm_scoreboard", p:"uvm_component", cat:"Components", f:"src/comps/uvm_scoreboard.svh",
+    en:"Base class for scoreboards. Compare expected vs actual results.",
+    zh:"记分板基类。比较预期和实际结果。",
+    fn:[{n:"new",s:"function new(string name, uvm_component parent)",d:"Creates a scoreboard."}], tk:[], pr:[],
+    src:`class uvm_scoreboard extends uvm_component;\n\n  \\\`uvm_component_utils(uvm_scoreboard)\n\n  // Function: new\n  function new(string name, uvm_component parent);\n    super.new(name, parent);\n  endfunction\n\nendclass`},
+  uvm_subscriber: { x:"uvm_subscriber", p:"uvm_component", cat:"Components", f:"src/comps/uvm_subscriber.svh",
+    en:"Provides an analysis export for receiving transactions. Must implement write().",
+    zh:"提供 analysis export 接收事务。必须实现 write()。",
+    fn:[{n:"new",s:"function new(string name, uvm_component parent)",d:"Creates a subscriber."},{n:"write",s:"pure virtual function void write(T t)",d:"Must override."}],
+    tk:[], pr:[{n:"analysis_export",d:"The analysis implementation port."}],
+    src:`class uvm_subscriber #(type T = int)\n  extends uvm_component;\n\n  uvm_analysis_imp #(T, uvm_subscriber #(T))\n    analysis_export;\n\n  // Function: new\n  function new(string name, uvm_component parent);\n    super.new(name, parent);\n    analysis_export = new("analysis_export", this);\n  endfunction\n\n  // Function: write\n  pure virtual function void write(T t);\n\nendclass`},
+  uvm_sequence_item: { x:"uvm_sequence_item", p:"uvm_transaction", cat:"Sequences", f:"src/seq/uvm_sequence_item.svh",
+    en:"Base class for data objects flowing between sequences and drivers.",
+    zh:"序列和驱动器间流动的数据对象基类。",
+    fn:[{n:"new",s:'function new(string name = "uvm_sequence_item")',d:"Creates a sequence item."},{n:"get_sequence_id",s:"function int get_sequence_id()",d:"Returns parent sequence id."},{n:"get_sequencer",s:"function uvm_sequencer_base get_sequencer()",d:"Returns the sequencer."}],
+    tk:[], pr:[],
+    src:`class uvm_sequence_item extends uvm_transaction;\n\n  local int m_sequence_id = -1;\n  protected uvm_sequencer_base m_sequencer;\n\n  // Function: new\n  function new(string name = "uvm_sequence_item");\n    super.new(name);\n  endfunction\n\n  // Function: get_sequence_id\n  function int get_sequence_id();\n    return m_sequence_id;\n  endfunction\n\n  // Function: get_sequencer\n  function uvm_sequencer_base get_sequencer();\n    return m_sequencer;\n  endfunction\n\nendclass`},
+  uvm_sequence_base: { x:"uvm_sequence_base", p:"uvm_sequence_item", cat:"Sequences", f:"src/seq/uvm_sequence_base.svh",
+    en:"Base class for all sequences. Provides body(), start(), pre_body/post_body.",
+    zh:"所有序列的基类。提供 body()、start()、pre_body/post_body。",
+    fn:[{n:"new",s:'function new(string name = "uvm_sequence")',d:"Creates a sequence."}],
+    tk:[{n:"body",s:"virtual task body()",d:"Override to define sequence behavior."},{n:"start",s:"virtual task start(uvm_sequencer_base sequencer, ...)",d:"Starts sequence on sequencer."},{n:"pre_body",s:"virtual task pre_body()",d:"Called before body()."},{n:"post_body",s:"virtual task post_body()",d:"Called after body()."}],
+    pr:[],
+    src:`class uvm_sequence_base\n  extends uvm_sequence_item;\n\n  // Function: new\n  function new(string name = "uvm_sequence");\n    super.new(name);\n  endfunction\n\n  // Task: body\n  virtual task body();\n    return;\n  endtask\n\n  // Task: start\n  virtual task start(\n    uvm_sequencer_base sequencer,\n    uvm_sequence_base parent_sequence = null,\n    int this_priority = -1,\n    bit call_pre_post = 1);\n    // start implementation\n  endtask\n\n  // Task: pre_body\n  virtual task pre_body();\n    return;\n  endtask\n\n  // Task: post_body\n  virtual task post_body();\n    return;\n  endtask\n\nendclass`},
+  uvm_sequence: { x:"uvm_sequence", p:"uvm_sequence_base", cat:"Sequences", f:"src/seq/uvm_sequence.svh",
+    en:"Parameterized sequence with REQ/RSP. Provides start_item/finish_item.",
+    zh:"带 REQ/RSP 参数的序列。提供 start_item/finish_item。",
+    fn:[{n:"new",s:'function new(string name = "uvm_sequence")',d:"Creates a sequence."},{n:"start_item",s:"virtual task start_item(uvm_sequence_item item, ...)",d:"Requests sequencer access."},{n:"finish_item",s:"virtual task finish_item(uvm_sequence_item item, ...)",d:"Sends item to driver."}],
+    tk:[{n:"body",s:"virtual task body()",d:"Override to define sequence."}], pr:[],
+    src:`class uvm_sequence #(type REQ = uvm_sequence_item,\n                       type RSP = REQ)\n  extends uvm_sequence_base;\n\n  // Function: new\n  function new(string name = "uvm_sequence");\n    super.new(name);\n  endfunction\n\n  // Task: body\n  virtual task body();\n    return;\n  endtask\n\n  // Task: start_item\n  virtual task start_item(\n    uvm_sequence_item item,\n    int set_priority = -1,\n    uvm_sequencer_base sequencer = null);\n    // sequencer arbitration\n  endtask\n\n  // Task: finish_item\n  virtual task finish_item(\n    uvm_sequence_item item,\n    int set_priority = -1);\n    // send to driver\n  endtask\n\nendclass`},
+  uvm_sequencer: { x:"uvm_sequencer", p:"uvm_component", cat:"Sequences", f:"src/seq/uvm_sequencer.svh",
+    en:"Routes sequence items between sequences and driver. Arbitrates among multiple sequences.",
+    zh:"在序列和驱动器间路由 sequence item，多序列仲裁。",
+    fn:[{n:"new",s:"function new(string name, uvm_component parent)",d:"Creates a sequencer."}], tk:[], pr:[],
+    src:`class uvm_sequencer #(type REQ = uvm_sequence_item,\n                        type RSP = REQ)\n  extends uvm_component;\n\n  uvm_seq_item_pull_imp #(REQ, RSP, this_type)\n    seq_item_export;\n\n  // Function: new\n  function new(string name, uvm_component parent);\n    super.new(name, parent);\n    seq_item_export = new("seq_item_export", this);\n  endfunction\n\nendclass`},
+  uvm_config_db: { x:"uvm_config_db", p:"uvm_object", cat:"Config", f:"src/base/uvm_config_db.svh",
+    en:"Convenience interface for configuration. Set and get values across the testbench hierarchy.",
+    zh:"配置便利接口。在测试平台层次中设置和获取配置值。",
+    fn:[{n:"set",s:"static function void set(uvm_component cntxt, string inst_name, string field_name, T value)",d:"Sets a config value."},{n:"get",s:"static function bit get(uvm_component cntxt, string inst_name, string field_name, inout T value)",d:"Gets a config value."},{n:"exists",s:"static function bit exists(uvm_component cntxt, string inst_name, string field_name, bit spell_chk = 0)",d:"Checks if entry exists."}],
+    tk:[], pr:[],
+    src:`class uvm_config_db #(type T = int)\n  extends uvm_object;\n\n  // Function: set\n  static function void set(\n    uvm_component cntxt, string inst_name,\n    string field_name, T value);\n    uvm_resource_db#(T)::set(\n      {cntxt.get_full_name(), ".", inst_name},\n      field_name, value, cntxt);\n  endfunction\n\n  // Function: get\n  static function bit get(\n    uvm_component cntxt, string inst_name,\n    string field_name, inout T value);\n    uvm_resource#(T) r;\n    r = uvm_resource_db#(T)::get_by_name(\n      {cntxt.get_full_name(), ".", inst_name},\n      field_name);\n    if (r == null) return 0;\n    value = r.read(cntxt);\n    return 1;\n  endfunction\n\n  // Function: exists\n  static function bit exists(\n    uvm_component cntxt, string inst_name,\n    string field_name, bit spell_chk = 0);\n    // lookup\n  endfunction\n\nendclass`},
+  uvm_resource_db: { x:"uvm_resource_db", p:"uvm_object", cat:"Config", f:"src/base/uvm_resource_db.svh",
+    en:"Low-level resource database for sharing data across testbench.",
+    zh:"底层资源数据库，用于在测试平台间共享数据。",
+    fn:[{n:"set",s:"static function void set(string scope, string name, T val, uvm_object accessor = null)",d:"Sets a resource."},{n:"get_by_name",s:"static function uvm_resource#(T) get_by_name(string scope, string name, bit rpterr = 1)",d:"Gets resource by name."}],
+    tk:[], pr:[],
+    src:`class uvm_resource_db #(type T = int)\n  extends uvm_object;\n\n  // Function: set\n  static function void set(\n    string scope, string name,\n    T val, uvm_object accessor = null);\n  endfunction\n\n  // Function: get_by_name\n  static function uvm_resource#(T) get_by_name(\n    string scope, string name, bit rpterr = 1);\n  endfunction\n\nendclass`},
+  uvm_phase: { x:"uvm_phase", p:"uvm_object", cat:"Phasing", f:"src/base/uvm_phase.svh",
+    en:"Defines UVM phase infrastructure. Controls order of build, connect, run, cleanup.",
+    zh:"定义 UVM 阶段基础设施。控制构建、连接、运行和清理的顺序。",
+    fn:[{n:"new",s:"function new(string name, uvm_phase_type phase_type, uvm_phase parent = null)",d:"Creates a phase."},{n:"get_state",s:"function uvm_phase_state get_state()",d:"Returns phase state."},{n:"raise_objection",s:'virtual function void raise_objection(uvm_object obj, string description = "", int count = 1)',d:"Raises objection."},{n:"drop_objection",s:'virtual function void drop_objection(uvm_object obj, string description = "", int count = 1)',d:"Drops objection."}],
+    tk:[], pr:[],
+    src:`class uvm_phase extends uvm_object;\n\n  local uvm_phase_type m_phase_type;\n  local uvm_phase_state m_state;\n\n  // Function: new\n  function new(string name = "uvm_phase",\n               uvm_phase_type phase_type = UVM_PHASE_SCHEDULE,\n               uvm_phase parent = null);\n    super.new(name);\n    m_phase_type = phase_type;\n  endfunction\n\n  // Function: get_state\n  function uvm_phase_state get_state();\n    return m_state;\n  endfunction\n\n  // Function: raise_objection\n  virtual function void raise_objection(\n    uvm_object obj, string description = "",\n    int count = 1);\n  endfunction\n\n  // Function: drop_objection\n  virtual function void drop_objection(\n    uvm_object obj, string description = "",\n    int count = 1);\n  endfunction\n\nendclass`},
+  uvm_objection: { x:"uvm_objection", p:"uvm_object", cat:"Phasing", f:"src/base/uvm_objection.svh",
+    en:"Provides a mechanism for components to coordinate phase completion via raise/drop objections.",
+    zh:"提供组件通过 raise/drop objection 协调阶段完成的机制。",
+    fn:[{n:"new",s:'function new(string name = "")',d:"Creates an objection."},{n:"raise_objection",s:'function void raise_objection(uvm_object obj, string description = "", int count = 1)',d:"Raise objection."},{n:"drop_objection",s:'function void drop_objection(uvm_object obj, string description = "", int count = 1)',d:"Drop objection."},{n:"get_objection_count",s:"function int get_objection_count(uvm_object obj = null)",d:"Returns objection count."}],
+    tk:[], pr:[],
+    src:`class uvm_objection extends uvm_object;\n\n  // Function: new\n  function new(string name = "");\n    super.new(name);\n  endfunction\n\n  // Function: raise_objection\n  function void raise_objection(\n    uvm_object obj, string description = "",\n    int count = 1);\n    // increment count\n  endfunction\n\n  // Function: drop_objection\n  function void drop_objection(\n    uvm_object obj, string description = "",\n    int count = 1);\n    // decrement count\n  endfunction\n\n  // Function: get_objection_count\n  function int get_objection_count(\n    uvm_object obj = null);\n    // return count\n  endfunction\n\nendclass`},
+  uvm_reg_block: { x:"uvm_reg_block", p:"uvm_object", cat:"Register", f:"src/reg/uvm_reg_block.svh",
+    en:"Base class for register blocks — collections of registers, memories, and sub-blocks.",
+    zh:"寄存器块基类 — 寄存器、存储器和子块的集合。",
+    fn:[{n:"new",s:'function new(string name = "", int has_coverage = UVM_NO_COVERAGE)',d:"Creates a register block."},{n:"build",s:"virtual function void build()",d:"Builds register model."},{n:"lock_model",s:"virtual function void lock_model()",d:"Locks the model."}],
+    tk:[], pr:[],
+    src:`class uvm_reg_block extends uvm_object;\n\n  local uvm_reg_map default_map;\n  local bit locked;\n\n  // Function: new\n  function new(string name = "",\n               int has_coverage = UVM_NO_COVERAGE);\n    super.new(name);\n    locked = 0;\n  endfunction\n\n  // Function: build\n  virtual function void build();\n  endfunction\n\n  // Function: lock_model\n  virtual function void lock_model();\n    locked = 1;\n  endfunction\n\nendclass`},
+  uvm_reg: { x:"uvm_reg", p:"uvm_object", cat:"Register", f:"src/reg/uvm_reg.svh",
+    en:"Represents a single register. Contains fields, mapped to addresses.",
+    zh:"代表单个寄存器。包含字段，映射到地址。",
+    fn:[{n:"new",s:"function new(string name, int unsigned n_bits, int has_coverage)",d:"Creates a register."},{n:"get_reset",s:'function uvm_reg_data_t get_reset(string kind = "HARD")',d:"Gets reset value."}],
+    tk:[{n:"read",s:"virtual task read(output uvm_status_e status, output uvm_reg_data_t value, ...)",d:"Reads register."},{n:"write",s:"virtual task write(output uvm_status_e status, input uvm_reg_data_t value, ...)",d:"Writes register."}],
+    pr:[],
+    src:`class uvm_reg extends uvm_object;\n\n  local uvm_reg_field m_fields[$];\n  local int unsigned m_n_bits;\n\n  // Function: new\n  function new(string name = "",\n               int unsigned n_bits,\n               int has_coverage);\n    super.new(name);\n    m_n_bits = n_bits;\n  endfunction\n\n  // Function: get_reset\n  function uvm_reg_data_t get_reset(\n    string kind = "HARD");\n    uvm_reg_data_t rst = 0;\n    foreach (m_fields[i])\n      rst |= m_fields[i].get_reset(kind)\n             << m_fields[i].get_lsb_pos();\n    return rst;\n  endfunction\n\n  // Task: read\n  virtual task read(\n    output uvm_status_e status,\n    output uvm_reg_data_t value,\n    input uvm_path_e path = UVM_DEFAULT_PATH,\n    input uvm_reg_map map = null,\n    input uvm_sequence_base parent = null,\n    input int prior = -1,\n    input uvm_object extension = null,\n    input string fname = "",\n    input int lineno = 0);\n  endtask\n\n  // Task: write\n  virtual task write(\n    output uvm_status_e status,\n    input uvm_reg_data_t value,\n    input uvm_path_e path = UVM_DEFAULT_PATH,\n    input uvm_reg_map map = null,\n    input uvm_sequence_base parent = null,\n    input int prior = -1,\n    input uvm_object extension = null,\n    input string fname = "",\n    input int lineno = 0);\n  endtask\n\nendclass`},
+  uvm_reg_field: { x:"uvm_reg_field", p:"uvm_object", cat:"Register", f:"src/reg/uvm_reg_field.svh",
+    en:"A field within a register — contiguous bits with access policies.",
+    zh:"寄存器字段 — 具有访问策略的连续位。",
+    fn:[{n:"new",s:'function new(string name = "uvm_reg_field")',d:"Creates a field."},{n:"configure",s:"function void configure(uvm_reg parent, int unsigned size, int unsigned lsb_pos, string access, ...)",d:"Configures the field."},{n:"get_reset",s:'function uvm_reg_data_t get_reset(string kind = "HARD")',d:"Gets reset value."},{n:"get_lsb_pos",s:"function int unsigned get_lsb_pos()",d:"Returns LSB position."}],
+    tk:[], pr:[],
+    src:`class uvm_reg_field extends uvm_object;\n\n  local uvm_reg m_parent;\n  local int unsigned m_size;\n  local int unsigned m_lsb_pos;\n\n  // Function: new\n  function new(string name = "uvm_reg_field");\n    super.new(name);\n  endfunction\n\n  // Function: configure\n  function void configure(\n    uvm_reg parent, int unsigned size,\n    int unsigned lsb_pos, string access,\n    bit volatile, uvm_reg_data_t reset,\n    bit has_reset, bit is_rand,\n    bit individually_accessible);\n    m_parent = parent;\n    m_size = size;\n    m_lsb_pos = lsb_pos;\n  endfunction\n\n  // Function: get_lsb_pos\n  function int unsigned get_lsb_pos();\n    return m_lsb_pos;\n  endfunction\n\nendclass`},
+  uvm_comparer: { x:"uvm_comparer", p:"uvm_object", cat:"Policies", f:"src/base/uvm_comparer.svh",
+    en:"Policy object for deep comparisons between uvm_objects.",
+    zh:"uvm_object 深度比较的策略对象。",
+    fn:[{n:"new",s:'function new(string name = "uvm_comparer")',d:"Creates a comparer."},{n:"get_default",s:"static function uvm_comparer get_default()",d:"Returns default singleton."}],
+    tk:[], pr:[{n:"show_max",d:"Max miscompare messages."},{n:"verbosity",d:"Verbosity level."}],
+    src:`class uvm_comparer extends uvm_object;\n\n  int unsigned show_max = 1;\n  int unsigned verbosity = UVM_LOW;\n  static local uvm_comparer m_default;\n\n  // Function: new\n  function new(string name = "uvm_comparer");\n    super.new(name);\n  endfunction\n\n  // Function: get_default\n  static function uvm_comparer get_default();\n    if (m_default == null)\n      m_default = new("default_comparer");\n    return m_default;\n  endfunction\n\nendclass`},
+  uvm_printer: { x:"uvm_printer", p:"uvm_object", cat:"Policies", f:"src/base/uvm_printer.svh",
+    en:"Policy for printing uvm_objects (table, tree, line formats).",
+    zh:"以各种格式打印 uvm_object 的策略。",
+    fn:[{n:"new",s:'function new(string name = "uvm_printer")',d:"Creates a printer."},{n:"get_default",s:"static function uvm_printer get_default()",d:"Returns default."},{n:"emit",s:"virtual function string emit()",d:"Returns string."}],
+    tk:[], pr:[],
+    src:`class uvm_printer extends uvm_object;\n\n  static local uvm_printer m_default;\n\n  // Function: new\n  function new(string name = "uvm_printer");\n    super.new(name);\n  endfunction\n\n  // Function: get_default\n  static function uvm_printer get_default();\n    if (m_default == null)\n      m_default = new("default_printer");\n    return m_default;\n  endfunction\n\n  // Function: emit\n  virtual function string emit();\n    return "";\n  endfunction\n\nendclass`},
+  uvm_packer: { x:"uvm_packer", p:"uvm_object", cat:"Policies", f:"src/base/uvm_packer.svh",
+    en:"Policy for packing/unpacking uvm_objects into streams.",
+    zh:"将 uvm_object 打包/解包为流的策略。",
+    fn:[{n:"new",s:'function new(string name = "uvm_packer")',d:"Creates a packer."}], tk:[], pr:[],
+    src:`class uvm_packer extends uvm_object;\n\n  // Function: new\n  function new(string name = "uvm_packer");\n    super.new(name);\n  endfunction\n\nendclass`},
+  uvm_factory: { x:"uvm_factory", p:"uvm_object", cat:"Factory", f:"src/base/uvm_factory.svh",
+    en:"Central factory for creating UVM objects/components. Supports type and instance overrides.",
+    zh:"创建 UVM 对象/组件的中央工厂。支持类型和实例覆盖。",
+    fn:[{n:"get",s:"static function uvm_factory get()",d:"Returns factory singleton."},{n:"set_type_override_by_type",s:"function void set_type_override_by_type(uvm_object_wrapper original_type, uvm_object_wrapper override_type, bit replace = 1)",d:"Global type override."},{n:"set_inst_override_by_type",s:"function void set_inst_override_by_type(uvm_object_wrapper original_type, uvm_object_wrapper override_type, string full_inst_path)",d:"Instance override."},{n:"create_object_by_type",s:'function uvm_object create_object_by_type(uvm_object_wrapper requested_type, string parent_inst_path = "", string name = "")',d:"Creates via factory."},{n:"print",s:"function void print(int all_types = 1)",d:"Prints factory state."}],
+    tk:[], pr:[],
+    src:`class uvm_factory extends uvm_object;\n\n  static local uvm_factory m_inst;\n\n  // Function: get\n  static function uvm_factory get();\n    if (m_inst == null)\n      m_inst = new();\n    return m_inst;\n  endfunction\n\n  // Function: set_type_override_by_type\n  function void set_type_override_by_type(\n    uvm_object_wrapper original_type,\n    uvm_object_wrapper override_type,\n    bit replace = 1);\n  endfunction\n\n  // Function: set_inst_override_by_type\n  function void set_inst_override_by_type(\n    uvm_object_wrapper original_type,\n    uvm_object_wrapper override_type,\n    string full_inst_path);\n  endfunction\n\n  // Function: create_object_by_type\n  function uvm_object create_object_by_type(\n    uvm_object_wrapper requested_type,\n    string parent_inst_path = "",\n    string name = "");\n  endfunction\n\n  // Function: print\n  function void print(int all_types = 1);\n  endfunction\n\nendclass`},
+  uvm_report_handler: { x:"uvm_report_handler", p:"uvm_object", cat:"Reporting", f:"src/base/uvm_report_handler.svh",
+    en:"Processes UVM reports — routes messages based on severity, id, and verbosity.",
+    zh:"处理 UVM 报告 — 按严重性、ID 和详细程度路由消息。",
+    fn:[{n:"new",s:'function new(string name = "uvm_report_handler")',d:"Creates handler."},{n:"report",s:"function void report(uvm_severity severity, string name, string id, string message, int verbosity, string filename, int line, uvm_report_object client)",d:"Processes a report."},{n:"set_verbosity_level",s:"function void set_verbosity_level(int verbosity_level)",d:"Sets verbosity."}],
+    tk:[], pr:[],
+    src:`class uvm_report_handler extends uvm_object;\n\n  // Function: new\n  function new(string name = "uvm_report_handler");\n    super.new(name);\n  endfunction\n\n  // Function: report\n  function void report(\n    uvm_severity severity, string name,\n    string id, string message,\n    int verbosity, string filename,\n    int line, uvm_report_object client);\n    // route to server\n  endfunction\n\n  // Function: set_verbosity_level\n  function void set_verbosity_level(\n    int verbosity_level);\n  endfunction\n\nendclass`},
+  uvm_report_server: { x:"uvm_report_server", p:"uvm_object", cat:"Reporting", f:"src/base/uvm_report_server.svh",
+    en:"Central report server. Formats/outputs messages, tracks error/fatal counts.",
+    zh:"中央报告服务器。格式化输出消息，跟踪错误/致命计数。",
+    fn:[{n:"get_server",s:"static function uvm_report_server get_server()",d:"Returns server singleton."},{n:"get_severity_count",s:"function int get_severity_count(uvm_severity severity)",d:"Returns count for severity."}],
+    tk:[], pr:[],
+    src:`class uvm_report_server extends uvm_object;\n\n  static local uvm_report_server m_server;\n\n  // Function: get_server\n  static function uvm_report_server get_server();\n    if (m_server == null)\n      m_server = new();\n    return m_server;\n  endfunction\n\n  // Function: get_severity_count\n  function int get_severity_count(\n    uvm_severity severity);\n  endfunction\n\nendclass`},
+  uvm_report_catcher: { x:"uvm_report_catcher", p:"uvm_object", cat:"Reporting", f:"src/base/uvm_report_catcher.svh",
+    en:"Intercept, modify, or suppress report messages before processing.",
+    zh:"在处理前拦截、修改或抑制报告消息。",
+    fn:[{n:"new",s:'function new(string name = "uvm_report_catcher")',d:"Creates catcher."},{n:"catch",s:"pure virtual function action_e catch()",d:"Override to process reports."}],
+    tk:[], pr:[],
+    src:`class uvm_report_catcher extends uvm_object;\n\n  // Function: new\n  function new(string name = "uvm_report_catcher");\n    super.new(name);\n  endfunction\n\n  // Function: catch\n  pure virtual function action_e catch();\n\nendclass`},
+  uvm_tlm_fifo: { x:"uvm_tlm_fifo", p:"uvm_component", cat:"TLM", f:"src/tlm1/uvm_tlm_fifos.svh",
+    en:"FIFO for passing transactions between TLM components. Provides put, get, peek.",
+    zh:"TLM 组件间传递事务的 FIFO。提供 put、get、peek。",
+    fn:[{n:"new",s:"function new(string name, uvm_component parent, int size = 1)",d:"Creates a TLM FIFO."},{n:"size",s:"function int size()",d:"Returns capacity."},{n:"used",s:"function int used()",d:"Returns entry count."},{n:"is_empty",s:"function bit is_empty()",d:"Returns 1 if empty."},{n:"is_full",s:"function bit is_full()",d:"Returns 1 if full."}],
+    tk:[], pr:[],
+    src:`class uvm_tlm_fifo #(type T = int)\n  extends uvm_component;\n\n  local int m_size;\n  local T m_data[$];\n\n  // Function: new\n  function new(string name,\n               uvm_component parent,\n               int size = 1);\n    super.new(name, parent);\n    m_size = size;\n  endfunction\n\n  // Function: size\n  function int size();\n    return m_size;\n  endfunction\n\n  // Function: used\n  function int used();\n    return m_data.size();\n  endfunction\n\n  // Function: is_empty\n  function bit is_empty();\n    return m_data.size() == 0;\n  endfunction\n\n  // Function: is_full\n  function bit is_full();\n    return m_data.size() == m_size;\n  endfunction\n\nendclass`},
+  uvm_analysis_port: { x:"uvm_analysis_port", p:"uvm_object", cat:"TLM", f:"src/tlm1/uvm_analysis_port.svh",
+    en:"Broadcasts transactions to all connected analysis implementations via write().",
+    zh:"通过 write() 向所有连接的 analysis 实现广播事务。",
+    fn:[{n:"new",s:"function new(string name, uvm_component parent)",d:"Creates an analysis port."},{n:"write",s:"function void write(T t)",d:"Broadcasts to all subscribers."}],
+    tk:[], pr:[],
+    src:`class uvm_analysis_port #(type T = int)\n  extends uvm_object;\n\n  // Function: new\n  function new(string name,\n               uvm_component parent);\n    super.new(name);\n  endfunction\n\n  // Function: write\n  function void write(T t);\n    // broadcast to subscribers\n  endfunction\n\nendclass`},
+};
+
+const MAC = {
+  uvm_component_utils:{nm:"`uvm_component_utils",cat:"Factory",f:"src/macros/uvm_object_defines.svh",en:"Registers component type with factory. Enables type_id::create().",zh:"将组件注册到工厂，启用 type_id::create()。",usage:"`uvm_component_utils(my_comp)",exp:`typedef uvm_component_registry #(T) type_id;\nstatic function type_id get_type();\n  return type_id::get();\nendfunction`},
+  uvm_object_utils:{nm:"`uvm_object_utils",cat:"Factory",f:"src/macros/uvm_object_defines.svh",en:"Registers object type with factory. For non-component classes.",zh:"将对象注册到工厂。用于非组件类。",usage:"`uvm_object_utils(my_txn)",exp:`typedef uvm_object_registry #(T) type_id;\nstatic function type_id get_type();\n  return type_id::get();\nendfunction`},
+  uvm_info:{nm:"`uvm_info",cat:"Reporting",f:"src/macros/uvm_message_defines.svh",en:"Issues informational message with ID, message, and verbosity.",zh:"发出信息消息，含 ID、消息和详细程度。",usage:'`uvm_info("ID", "msg", UVM_MEDIUM)',exp:`if (uvm_report_enabled(UVM_MEDIUM, UVM_INFO, ID))\n  uvm_report_info(ID, MSG, UVM_MEDIUM,\n    \\\`__FILE__, \\\`__LINE__, "", 1);`},
+  uvm_warning:{nm:"`uvm_warning",cat:"Reporting",f:"src/macros/uvm_message_defines.svh",en:"Issues a warning message.",zh:"发出警告消息。",usage:'`uvm_warning("ID", "msg")',exp:`if (uvm_report_enabled(UVM_NONE, UVM_WARNING, ID))\n  uvm_report_warning(ID, MSG, UVM_NONE,\n    \\\`__FILE__, \\\`__LINE__, "", 1);`},
+  uvm_error:{nm:"`uvm_error",cat:"Reporting",f:"src/macros/uvm_message_defines.svh",en:"Issues an error message.",zh:"发出错误消息。",usage:'`uvm_error("ID", "msg")',exp:`if (uvm_report_enabled(UVM_NONE, UVM_ERROR, ID))\n  uvm_report_error(ID, MSG, UVM_NONE,\n    \\\`__FILE__, \\\`__LINE__, "", 1);`},
+  uvm_fatal:{nm:"`uvm_fatal",cat:"Reporting",f:"src/macros/uvm_message_defines.svh",en:"Issues fatal message, ends simulation.",zh:"发出致命消息，终止仿真。",usage:'`uvm_fatal("ID", "msg")',exp:`if (uvm_report_enabled(UVM_NONE, UVM_FATAL, ID))\n  uvm_report_fatal(ID, MSG, UVM_NONE,\n    \\\`__FILE__, \\\`__LINE__, "", 1);`},
+  uvm_do:{nm:"`uvm_do",cat:"Sequences",f:"src/macros/uvm_sequence_defines.svh",en:"Creates, randomizes, and sends a sequence item in one step.",zh:"一步完成创建、随机化并发送 sequence item。",usage:"`uvm_do(req)",exp:`\\\`uvm_create(SEQ_OR_ITEM)\nstart_item(SEQ_OR_ITEM);\nif (!SEQ_OR_ITEM.randomize())\n  \\\`uvm_warning("RNDFLD", "Randomize failed")\nfinish_item(SEQ_OR_ITEM);`},
+  uvm_do_with:{nm:"`uvm_do_with",cat:"Sequences",f:"src/macros/uvm_sequence_defines.svh",en:"Like `uvm_do with inline randomization constraints.",zh:"类似 `uvm_do，带内联随机化约束。",usage:"`uvm_do_with(req, { req.addr == 32'hFF; })",exp:`\\\`uvm_create(SEQ_OR_ITEM)\nstart_item(SEQ_OR_ITEM);\nif (!SEQ_OR_ITEM.randomize() with CONSTRAINTS)\n  \\\`uvm_warning("RNDFLD", "Randomize failed")\nfinish_item(SEQ_OR_ITEM);`},
+  uvm_field_int:{nm:"`uvm_field_int",cat:"Factory",f:"src/macros/uvm_object_defines.svh",en:"Registers an integral field for automated copy/compare/pack/print.",zh:"注册整数字段，用于自动 copy/compare/pack/print。",usage:"`uvm_field_int(my_addr, UVM_ALL_ON)",exp:`// Enables automated:\n// copy, compare, pack, unpack, print, record`},
+  uvm_field_string:{nm:"`uvm_field_string",cat:"Factory",f:"src/macros/uvm_object_defines.svh",en:"Registers a string field for automated operations.",zh:"注册字符串字段用于自动操作。",usage:'`uvm_field_string(my_name, UVM_ALL_ON)',exp:`// Enables automated:\n// copy, compare, pack, unpack, print, record\n// for string type fields`},
+  uvm_field_object:{nm:"`uvm_field_object",cat:"Factory",f:"src/macros/uvm_object_defines.svh",en:"Registers an object-type field for automated deep copy/compare/print.",zh:"注册对象类型字段用于自动深拷贝/比较/打印。",usage:"`uvm_field_object(my_cfg, UVM_ALL_ON)",exp:`// Enables automated deep:\n// copy, compare, pack, unpack, print, record\n// for uvm_object-derived fields`},
+  uvm_field_enum:{nm:"`uvm_field_enum",cat:"Factory",f:"src/macros/uvm_object_defines.svh",en:"Registers an enum field for automated operations with proper name formatting.",zh:"注册枚举字段用于自动操作，支持名称格式化。",usage:"`uvm_field_enum(my_enum_t, my_mode, UVM_ALL_ON)",exp:`// First argument is the enum type name\n// Enables automated operations with\n// proper enum name display in print`},
+  uvm_field_array_int:{nm:"`uvm_field_array_int",cat:"Factory",f:"src/macros/uvm_object_defines.svh",en:"Registers a dynamic array of integrals for automated operations.",zh:"注册整数动态数组字段用于自动操作。",usage:"`uvm_field_array_int(my_data, UVM_ALL_ON)",exp:`// Enables automated:\n// copy, compare, pack, unpack, print, record\n// for dynamic array of integral fields`},
+  uvm_component_utils_begin:{nm:"`uvm_component_utils_begin/end",cat:"Factory",f:"src/macros/uvm_object_defines.svh",en:"Begin/end block for component registration with field automation macros.",zh:"组件注册的起止块，配合字段自动化宏使用。",usage:"`uvm_component_utils_begin(my_comp)\n  `uvm_field_int(my_addr, UVM_ALL_ON)\n  `uvm_field_string(my_name, UVM_ALL_ON)\n`uvm_component_utils_end",exp:`// Combines factory registration with\n// field automation for multiple fields\n// Must pair begin with end`},
+  uvm_object_utils_begin:{nm:"`uvm_object_utils_begin/end",cat:"Factory",f:"src/macros/uvm_object_defines.svh",en:"Begin/end block for object registration with field automation macros.",zh:"对象注册的起止块，配合字段自动化宏使用。",usage:"`uvm_object_utils_begin(my_txn)\n  `uvm_field_int(addr, UVM_ALL_ON)\n  `uvm_field_int(data, UVM_ALL_ON)\n`uvm_object_utils_end",exp:`// Combines factory registration with\n// field automation for multiple fields\n// Must pair begin with end`},
+  uvm_component_param_utils:{nm:"`uvm_component_param_utils",cat:"Factory",f:"src/macros/uvm_object_defines.svh",en:"Registers a parameterized component type with the factory.",zh:"将参数化组件类型注册到工厂。",usage:"`uvm_component_param_utils(my_driver#(REQ, RSP))",exp:`typedef uvm_component_registry\n  #(T, "<unknown>") type_id;\n// Cannot use string-based lookup\n// for parameterized types`},
+  uvm_create:{nm:"`uvm_create",cat:"Sequences",f:"src/macros/uvm_sequence_defines.svh",en:"Creates a sequence item or subsequence via the factory without randomizing or sending.",zh:"通过工厂创建 sequence item 或子序列，不进行随机化或发送。",usage:"`uvm_create(req)",exp:`req = type_id::create("req",, get_full_name());\n// Does NOT randomize or send`},
+  uvm_send:{nm:"`uvm_send",cat:"Sequences",f:"src/macros/uvm_sequence_defines.svh",en:"Sends a pre-created and pre-randomized sequence item to the driver.",zh:"将预创建和预随机化的 sequence item 发送到 driver。",usage:"`uvm_send(req)",exp:`start_item(req);\nfinish_item(req);\n// Item must be pre-created and\n// pre-randomized before calling`},
+  uvm_do_on:{nm:"`uvm_do_on",cat:"Sequences",f:"src/macros/uvm_sequence_defines.svh",en:"Like `uvm_do but targets a specific sequencer.",zh:"类似 `uvm_do 但指定目标 sequencer。",usage:"`uvm_do_on(req, p_sequencer.sub_seqr)",exp:`\\\`uvm_create_on(SEQ_OR_ITEM, SEQR)\nstart_item(SEQ_OR_ITEM,, SEQR);\nif (!SEQ_OR_ITEM.randomize())\n  \\\`uvm_warning("RNDFLD", "failed")\nfinish_item(SEQ_OR_ITEM);`},
+  uvm_do_on_with:{nm:"`uvm_do_on_with",cat:"Sequences",f:"src/macros/uvm_sequence_defines.svh",en:"Like `uvm_do_with but targets a specific sequencer.",zh:"类似 `uvm_do_with 但指定目标 sequencer。",usage:"`uvm_do_on_with(req, seqr, {addr < 100;})",exp:`\\\`uvm_create_on(SEQ_OR_ITEM, SEQR)\nstart_item(SEQ_OR_ITEM,, SEQR);\nif (!SEQ_OR_ITEM.randomize() with CONSTR)\n  \\\`uvm_warning("RNDFLD", "failed")\nfinish_item(SEQ_OR_ITEM);`},
+  uvm_declare_p_sequencer:{nm:"`uvm_declare_p_sequencer",cat:"Sequences",f:"src/macros/uvm_sequence_defines.svh",en:"Declares a p_sequencer handle of the specified type for accessing sequencer properties.",zh:"声明指定类型的 p_sequencer 句柄，用于访问 sequencer 的属性。",usage:"`uvm_declare_p_sequencer(my_sequencer)",exp:`my_sequencer p_sequencer;\nvirtual function void m_set_p_sequencer();\n  super.m_set_p_sequencer();\n  if (!$cast(p_sequencer, m_sequencer))\n    \\\`uvm_fatal("DCLPSQ", "cast failed")\nendfunction`},
+  uvm_analysis_imp_decl:{nm:"`uvm_analysis_imp_decl",cat:"TLM",f:"src/macros/uvm_tlm_defines.svh",en:"Declares a named analysis imp class for multiple analysis ports in one component.",zh:"声明命名的 analysis imp 类，用于在一个组件中支持多个 analysis port。",usage:"`uvm_analysis_imp_decl(_ingress)\n`uvm_analysis_imp_decl(_egress)",exp:`// Creates classes:\n//   uvm_analysis_imp_ingress #(T, IMP)\n//   uvm_analysis_imp_egress #(T, IMP)\n// Component must implement:\n//   function void write_ingress(T t);\n//   function void write_egress(T t);`},
+  uvm_config_db_set:{nm:"`uvm_config_db::set",cat:"Config",f:"src/base/uvm_config_db.svh",en:"(Static method) Sets a configuration value in the database for a given scope.",zh:"（静态方法）在数据库中为给定范围设置配置值。",usage:'uvm_config_db#(int)::set(this, "*", "timeout", 1000)',exp:`// Hierarchical set:\n//   cntxt: context component (this)\n//   inst_name: instance path ("*" = all)\n//   field_name: config field name\n//   value: the value to store`},
+};
+
+// ── Indexes ────────────────────────────────────────────────────
+const CLS = Object.keys(D);
+const MACS = Object.keys(MAC);
+const der = n => CLS.filter(c => D[c].p === n);
+const anc = n => { const r=[]; let c=D[n]?.p; while(c&&D[c]){r.unshift(c);c=D[c].p;} return r; };
+const CATS = {}; CLS.forEach(c => { const k=D[c].cat; if(!CATS[k])CATS[k]=[]; CATS[k].push(c); });
+const MCATS = {}; MACS.forEach(m => { const k=MAC[m].cat; if(!MCATS[k])MCATS[k]=[]; MCATS[k].push(m); });
+const CO = ["Base","Components","Sequences","TLM","Phasing","Register","Config","Factory","Reporting","Policies"];
+
+// Build full file content from our data for a given file path
+const FILE_CLASSES = {};
+CLS.forEach(c => { const f=D[c].f; if(!FILE_CLASSES[f]) FILE_CLASSES[f]=[]; FILE_CLASSES[f].push(c); });
+MACS.forEach(m => { const f=MAC[m].f; if(!FILE_CLASSES[f]) FILE_CLASSES[f]=[]; FILE_CLASSES[f].push("__macro__"+m); });
+
+function getFullSrc(filePath) {
+  const header = 
+`//----------------------------------------------------------------------
+// Copyright 2007-2014 Mentor Graphics Corporation
+// Copyright 2014 Synopsys, Inc.
+// Copyright 2007-2014 Cadence Design Systems, Inc.
+// Copyright 2014 NVIDIA Corporation
+//   All Rights Reserved Worldwide
+//
+//   Licensed under the Apache License, Version 2.0 (the
+//   "License"); you may not use this file except in
+//   compliance with the License. You may obtain a copy of
+//   the License at
+//
+//       http://www.apache.org/licenses/LICENSE-2.0
+//
+//   Unless required by applicable law or agreed to in
+//   writing, software distributed under the License is
+//   distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+//   CONDITIONS OF ANY KIND, either express or implied. See
+//   the License for the specific language governing
+//   permissions and limitations under the License.
+//----------------------------------------------------------------------
+
+`;
+  const guard = filePath.replace(/[\/\.]/g, "_").toUpperCase();
+  const entries = FILE_CLASSES[filePath] || [];
+  let body = "";
+  entries.forEach(e => {
+    if (e.startsWith("__macro__")) {
+      const mk = e.replace("__macro__","");
+      const md = MAC[mk];
+      if (md) body += "// Macro: " + md.nm + "\n" + md.exp + "\n\n";
+    } else {
+      const dd = D[e];
+      if (dd) body += dd.src + "\n\n";
+    }
+  });
+  return header + "\`ifndef " + guard + "\n\`define " + guard + "\n\n" + body + "\`endif // " + guard + "\n";
+}
+
+// ── Tokenizer ──────────────────────────────────────────────────
+const KW = new Set(["class","endclass","extends","virtual","function","endfunction","task","endtask","return","if","else","begin","end","forever","input","output","inout","ref","local","protected","static","pure","string","int","bit","byte","integer","void","null","this","super","new","type","typedef","enum","unsigned","foreach","while","for","assert"]);
+function tok(src){return src.split("\n").map((L,li)=>{const T=[];let i=0;while(i<L.length){if(L[i]==="/"&&L[i+1]==="/"){T.push({t:"cmt",v:L.slice(i)});i=L.length;continue}if(L[i]==="\\"&&L[i+1]==="`"){const s=i;i+=2;while(i<L.length&&/\w/.test(L[i]))i++;T.push({t:"mac",v:L.slice(s,i)});continue}if(L[i]==="`"){const s=i;i++;while(i<L.length&&/\w/.test(L[i]))i++;T.push({t:"mac",v:L.slice(s,i)});continue}if(L[i]==='"'){const s=i;i++;while(i<L.length&&L[i]!=='"'){if(L[i]==="\\")i++;i++}i++;T.push({t:"str",v:L.slice(s,i)});continue}if(/\d/.test(L[i])&&(i===0||!/\w/.test(L[i-1]))){const s=i;while(i<L.length&&/[0-9'hHbBdDxXa-fA-F_]/.test(L[i]))i++;T.push({t:"num",v:L.slice(s,i)});continue}if(/[a-zA-Z_]/.test(L[i])){const s=i;while(i<L.length&&/\w/.test(L[i]))i++;const w=L.slice(s,i);T.push({t:KW.has(w)?"kw":D[w]?"cls":w.startsWith("UVM_")||w.startsWith("uvm_")?"uvm":"id",v:w});continue}T.push({t:"p",v:L[i]});i++}return{n:li+1,T}});}
+
+// ── History Hook ───────────────────────────────────────────────
+function useHistory() {
+  const [stack, setStack] = useState([{type:"home"}]);
+  const [idx, setIdx] = useState(0);
+  const push = useCallback(entry => {
+    setStack(s => { const ns = s.slice(0, idx+1); ns.push(entry); return ns; });
+    setIdx(i => i+1);
+  }, [idx]);
+  const back = useCallback(() => setIdx(i => Math.max(0, i-1)), []);
+  const fwd = useCallback(() => setIdx(i => Math.min(stack.length-1, i+1)), [stack.length]);
+  const cur = stack[idx] || {type:"home"};
+  return { cur, push, back, fwd, canBack: idx>0, canFwd: idx<stack.length-1 };
+}
+
+// ── Tooltip Component ──────────────────────────────────────────
+function Tooltip({text, children, theme}) {
+  const [show, setShow] = useState(false);
+  const [pos, setPos] = useState({x:0,y:0});
+  const t = TH[theme];
+  const ref = useRef(null);
+  const onEnter = e => { const r = e.currentTarget.getBoundingClientRect(); setPos({x:r.left, y:r.bottom+4}); setShow(true); };
+  return (<span ref={ref} onMouseEnter={onEnter} onMouseLeave={()=>setShow(false)} style={{display:"inline"}}>
+    {children}
+    {show && <div style={{position:"fixed",left:pos.x,top:pos.y,zIndex:999,background:t.tooltip,border:`1px solid ${t.border}`,borderRadius:6,padding:"6px 10px",fontSize:11,color:t.muted,maxWidth:300,boxShadow:`0 4px 16px ${t.shadow}`,fontFamily:"'IBM Plex Mono',monospace",pointerEvents:"none"}}>{text}</div>}
+  </span>);
+}
+
+// ── Full Source File Modal ──────────────────────────────────────
+function FullSrcModal({filePath, onClose, theme}) {
+  const t = TH[theme];
+  const src = useMemo(() => getFullSrc(filePath), [filePath]);
+  const lines = useMemo(() => tok(src), [src]);
+  const C = {kw:t.kw,str:t.str,cmt:t.cmt,num:t.num,mac:t.mac,cls:t.cls,uvm:t.uvm,id:t.text,p:t.text};
+
+  useEffect(() => {
+    const h = e => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", h);
+    return () => window.removeEventListener("keydown", h);
+  }, [onClose]);
+
+  return (
+    <div style={{position:"fixed",inset:0,zIndex:200,display:"flex",flexDirection:"column",background:t.bg,animation:"fadeIn .15s ease"}}>
+      {/* Header bar */}
+      <div style={{flexShrink:0,display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 20px",borderBottom:`1px solid ${t.border}`,background:t.header}}>
+        <div style={{display:"flex",alignItems:"center",gap:10}}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={t.acc} strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <span style={{fontFamily:"'IBM Plex Mono',monospace",fontSize:13,fontWeight:600,color:t.acc}}>{filePath}</span>
+          <span style={{color:t.dim,fontSize:11}}>{lines.length} lines</span>
+        </div>
+        <div style={{display:"flex",gap:6,alignItems:"center"}}>
+          <button onClick={()=>navigator.clipboard?.writeText(src)}
+            style={{background:t.card,border:`1px solid ${t.border}`,color:t.muted,padding:"4px 12px",borderRadius:4,cursor:"pointer",fontSize:11,fontFamily:"'IBM Plex Mono',monospace"}}
+            onMouseEnter={e=>e.currentTarget.style.background=t.hovBg} onMouseLeave={e=>e.currentTarget.style.background=t.card}>
+            Copy All
+          </button>
+          <button onClick={onClose}
+            style={{background:t.card,border:`1px solid ${t.border}`,color:t.muted,padding:"4px 10px",borderRadius:4,cursor:"pointer",fontSize:13}}
+            onMouseEnter={e=>e.currentTarget.style.color=t.text} onMouseLeave={e=>e.currentTarget.style.color=t.muted}>
+            ✕
+          </button>
+        </div>
+      </div>
+      {/* Source content */}
+      <div style={{flex:1,overflow:"auto",fontFamily:"'IBM Plex Mono','Fira Code',monospace",fontSize:13,lineHeight:1.65,background:t.code,padding:"12px 0"}}>
+        {lines.map(line => (
+          <div key={line.n} style={{display:"flex",padding:"0 20px",minHeight:21}}>
+            <span style={{width:48,textAlign:"right",paddingRight:16,color:t.dim,fontSize:12,userSelect:"none",flexShrink:0}}>{line.n}</span>
+            <span style={{flex:1,whiteSpace:"pre"}}>{line.T.map((tk,i) =>
+              <span key={i} style={{color:C[tk.t]||t.text}}>{tk.v}</span>
+            )}</span>
+          </div>
+        ))}
+      </div>
+      {/* Footer hint */}
+      <div style={{flexShrink:0,padding:"6px 20px",borderTop:`1px solid ${t.border}`,background:t.header,display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+        <span style={{color:t.dim,fontSize:11}}>Source: Accellera UVM 1.2 (Apache 2.0) — 内容仅供参考，以官方发布版本为准</span>
+        <span style={{color:t.dim,fontSize:11}}>
+          <kbd style={{padding:"1px 4px",borderRadius:2,border:`1px solid ${t.border}`,background:t.code,color:t.muted,fontSize:10,fontFamily:"'IBM Plex Mono',monospace"}}>Esc</kbd> 关闭
+        </span>
+      </div>
+    </div>
+  );
+}
+
+// ── SVG Hierarchy ──────────────────────────────────────────────
+function HierDiagram({active, onSelect, theme}) {
+  const t = TH[theme];
+  const [zm, setZm] = useState(1);
+  const [pan, setPan] = useState({x:0,y:0});
+  const [drag, setDrag] = useState(false);
+  const [ds, setDs] = useState({x:0,y:0});
+  const [hov, setHov] = useState(null);
+  const ref = useRef(null);
+
+  const layout = useMemo(() => {
+    const N=[], E=[]; const xG=170,yG=30; let yP=0;
+    function walk(nm,dp){const y=yP;yP+=yG;N.push({nm,x:dp*xG+16,y,dp});const ch=der(nm);ch.forEach(c=>{const cy=yP;walk(c,dp+1);E.push({x1:dp*xG+16,y1:y+9,x2:(dp+1)*xG+16,y2:cy+9});})}
+    walk("uvm_void",0);return{N,E,w:5*xG+180,h:yP+30};
+  },[]);
+
+  const wh = useCallback(e=>{e.preventDefault();setZm(z=>Math.max(0.25,Math.min(3,z+(e.deltaY>0?-0.1:0.1))));},[]);
+  useEffect(()=>{const el=ref.current;if(el){el.addEventListener("wheel",wh,{passive:false});return()=>el.removeEventListener("wheel",wh)}},[wh]);
+
+  return (<div style={{position:"relative",flex:1,overflow:"hidden",minHeight:200}}>
+    <div style={{position:"absolute",top:6,right:6,display:"flex",gap:3,zIndex:2}}>
+      {[{l:"+",a:()=>setZm(z=>Math.min(3,z+.2))},{l:"−",a:()=>setZm(z=>Math.max(.25,z-.2))},{l:"⟲",a:()=>{setZm(1);setPan({x:0,y:0})}}].map(b=>
+        <button key={b.l} onClick={b.a} style={{background:t.card,border:`1px solid ${t.border}`,color:t.muted,width:24,height:24,borderRadius:4,cursor:"pointer",fontSize:b.l==="⟲"?12:14,display:"flex",alignItems:"center",justifyContent:"center"}}>{b.l}</button>
+      )}
+    </div>
+    <svg ref={ref} width="100%" height="100%" style={{cursor:drag?"grabbing":"grab"}}
+      onMouseDown={e=>{if(e.button===0&&!e.target.closest("[data-nd]")){setDrag(true);setDs({x:e.clientX-pan.x,y:e.clientY-pan.y})}}}
+      onMouseMove={e=>{if(drag)setPan({x:e.clientX-ds.x,y:e.clientY-ds.y})}} onMouseUp={()=>setDrag(false)} onMouseLeave={()=>setDrag(false)}>
+      <g transform={`translate(${pan.x},${pan.y}) scale(${zm})`}>
+        {layout.E.map((e,i)=><path key={i} d={`M ${e.x1+55} ${e.y1} C ${e.x1+90} ${e.y1}, ${e.x2-30} ${e.y2}, ${e.x2} ${e.y2}`} fill="none" stroke={t.border} strokeWidth={1.2} opacity={.5}/>)}
+        {layout.N.map(nd=>{const isA=nd.nm===active,isH=nd.nm===hov;return(
+          <g key={nd.nm} data-nd transform={`translate(${nd.x},${nd.y})`} onClick={()=>onSelect(nd.nm)}
+            onMouseEnter={()=>setHov(nd.nm)} onMouseLeave={()=>setHov(null)} style={{cursor:"pointer"}}>
+            <rect x={-3} y={-1} width={Math.max(nd.nm.length*7+14,70)} height={18} rx={4}
+              fill={isA?t.hlBg:isH?t.hovBg:"transparent"} stroke={isA?t.acc:"transparent"} strokeWidth={1.2}/>
+            <circle cx={2} cy={8} r={2.5} fill={isA?t.acc:isH?t.acc2:t.dim}/>
+            <text x={9} y={12} fontSize={10.5} fontFamily="'IBM Plex Mono',monospace"
+              fill={isA?t.acc:isH?t.acc2:t.text} fontWeight={isA?700:400}>{nd.nm}</text>
+          </g>
+        )})}
+      </g>
+    </svg>
+  </div>);
+}
+
+// ── Source Code Viewer with Folding ────────────────────────────
+function SrcView({src, onNav, hlM, theme}) {
+  const t = TH[theme];
+  const lines = useMemo(()=>tok(src),[src]);
+  const ref = useRef(null);
+  const [folded, setFolded] = useState({});
+  const C = {kw:t.kw,str:t.str,cmt:t.cmt,num:t.num,mac:t.mac,cls:t.cls,uvm:t.uvm,id:t.text,p:t.text};
+
+  // Detect foldable regions (function...endfunction, task...endtask)
+  const foldMap = useMemo(()=>{
+    const map={};const stack=[];
+    lines.forEach(l=>{const txt=l.T.map(tk=>tk.v).join("");
+      if(/^\s*(virtual\s+)?(function|task)\s/.test(txt)&&!/;\s*$/.test(txt.replace(/\/\/.*$/,""))){stack.push(l.n)}
+      if(/^\s*end(function|task)/.test(txt)&&stack.length>0){const start=stack.pop();map[start]=l.n;}
+    });return map;
+  },[lines]);
+
+  useEffect(()=>{if(hlM&&ref.current){const el=ref.current.querySelector(`[data-m="${hlM}"]`);if(el)el.scrollIntoView({behavior:"smooth",block:"center"})}},[hlM,src]);
+
+  const toggleFold = ln => setFolded(p=>({...p,[ln]:!p[ln]}));
+
+  const visibleLines = useMemo(()=>{
+    const hidden = new Set();
+    Object.entries(folded).forEach(([start,isFolded])=>{
+      if(isFolded && foldMap[start]){for(let i=parseInt(start)+1;i<foldMap[start];i++)hidden.add(i)}
+    });
+    return lines.filter(l=>!hidden.has(l.n));
+  },[lines,folded,foldMap]);
+
+  return (<div ref={ref} style={{fontFamily:"'IBM Plex Mono','Fira Code',monospace",fontSize:13,lineHeight:1.65,background:t.code,borderRadius:8,padding:"14px 0",overflow:"auto",border:`1px solid ${t.border}`,position:"relative"}}>
+    <button onClick={()=>navigator.clipboard?.writeText(src)} style={{position:"absolute",top:8,right:12,background:t.card,border:`1px solid ${t.border}`,color:t.muted,padding:"3px 10px",borderRadius:4,cursor:"pointer",fontSize:11,fontFamily:"inherit",zIndex:2}}
+      onMouseEnter={e=>e.currentTarget.style.background=t.hovBg} onMouseLeave={e=>e.currentTarget.style.background=t.card}>Copy</button>
+    {visibleLines.map(line=>{
+      const txt=line.T.map(tk=>tk.v).join("");
+      const mm=txt.match(/(?:function|task)\s+(?:\w+\s+)?(\w+)\s*\(/);
+      const mn=mm?mm[1]:null;
+      const hl=mn&&hlM===mn;
+      const isFoldStart = foldMap[line.n] !== undefined;
+      const isFolded = folded[line.n];
+
+      return(<div key={line.n} data-m={mn||undefined} style={{display:"flex",padding:"0 16px",background:hl?t.hlBg:"transparent",borderLeft:hl?`3px solid ${t.acc}`:"3px solid transparent",position:"relative"}}>
+        {/* Fold gutter */}
+        <span style={{width:16,flexShrink:0,textAlign:"center",userSelect:"none",fontSize:10,lineHeight:"21px",color:t.dim,cursor:isFoldStart?"pointer":"default"}}
+          onClick={()=>isFoldStart&&toggleFold(line.n)}>
+          {isFoldStart?(isFolded?"▶":"▼"):""}
+        </span>
+        <span style={{width:36,textAlign:"right",paddingRight:12,color:t.dim,fontSize:12,userSelect:"none",flexShrink:0}}>{line.n}</span>
+        <span style={{flex:1,whiteSpace:"pre"}}>
+          {line.T.map((tk,i)=>{
+            if(tk.t==="cls") return <Tooltip key={i} text={D[tk.v]?D[tk.v].en.slice(0,80)+"...":tk.v} theme={theme}>
+              <span onClick={()=>onNav(tk.v)} style={{color:C.cls,cursor:"pointer",borderBottom:`1px dashed ${t.acc}44`,transition:"all .12s"}}
+                onMouseEnter={e=>e.currentTarget.style.borderBottomColor=t.acc} onMouseLeave={e=>e.currentTarget.style.borderBottomColor=t.acc+"44"}>{tk.v}</span>
+            </Tooltip>;
+            return <span key={i} style={{color:C[tk.t]||t.text}}>{tk.v}</span>;
+          })}
+          {isFolded && <span style={{color:t.dim,fontSize:11,marginLeft:4,background:t.card,padding:"0 6px",borderRadius:3,border:`1px solid ${t.border}`,cursor:"pointer"}} onClick={()=>toggleFold(line.n)}>⋯ {foldMap[line.n]-line.n-1} lines</span>}
+        </span>
+      </div>);
+    })}
+  </div>);
+}
+
+// ── Class Detail ───────────────────────────────────────────────
+function ClsDetail({cls, onNav, hlM, theme, onViewFile}) {
+  const t = TH[theme]; const d=D[cls]; if(!d) return <div style={{padding:40,color:t.muted}}>Not found.</div>;
+  const ancestors=anc(cls), derived=der(cls);
+  const methods=[...d.fn.map(m=>({...m,kind:"function"})),...d.tk.map(m=>({...m,kind:"task"}))];
+  return(<div style={{maxWidth:"100%",animation:"fadeIn .2s ease"}}>
+    <div style={{background:`linear-gradient(135deg, ${t.acc}08 0%, ${t.acc2}08 100%)`,border:`1px solid ${t.acc}18`,borderRadius:10,padding:"22px 26px",marginBottom:22}}>
+      <div style={{fontFamily:"'IBM Plex Mono',monospace",fontSize:20,fontWeight:700,color:t.acc,marginBottom:6}}>
+        <span style={{color:t.kw,fontWeight:400,fontSize:14,marginRight:8}}>class</span>{cls}
+        {d.p&&<><span style={{color:t.kw,fontWeight:400,fontSize:14,margin:"0 8px"}}>extends</span>
+          <span onClick={()=>onNav(d.p)} style={{color:t.acc2,cursor:"pointer",borderBottom:`1px dashed ${t.acc2}`}}>{d.p}</span></>}
+      </div>
+      <div style={{color:t.muted,fontSize:12,fontFamily:"'IBM Plex Mono',monospace",marginBottom:10,display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>{d.f}
+        <span onClick={()=>onViewFile(d.f)}
+          style={{display:"inline-flex",alignItems:"center",gap:4,color:t.acc2,fontSize:10.5,padding:"1px 6px",borderRadius:3,border:`1px solid ${t.acc2}30`,background:t.acc2+"08",cursor:"pointer",transition:"all .15s"}}
+          onMouseEnter={e=>{e.currentTarget.style.background=t.acc2+"18";e.currentTarget.style.borderColor=t.acc2+"55"}}
+          onMouseLeave={e=>{e.currentTarget.style.background=t.acc2+"08";e.currentTarget.style.borderColor=t.acc2+"30"}}>
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          查看完整源文件
+        </span>
+      </div>
+      {ancestors.length>0&&<div style={{display:"flex",alignItems:"center",gap:4,flexWrap:"wrap",marginBottom:6}}>
+        <span style={{color:t.muted,fontSize:11,fontWeight:600}}>CHAIN</span>
+        {ancestors.map((a,i)=><span key={a} style={{display:"flex",alignItems:"center",gap:4}}>
+          <span onClick={()=>onNav(a)} style={{color:t.acc2,cursor:"pointer",fontSize:12,fontFamily:"'IBM Plex Mono',monospace"}}>{a}</span>
+          <span style={{color:t.dim,fontSize:9}}>→</span></span>)}
+        <span style={{color:t.acc,fontSize:12,fontWeight:600,fontFamily:"'IBM Plex Mono',monospace"}}>{cls}</span>
+      </div>}
+      {derived.length>0&&<div style={{display:"flex",alignItems:"center",gap:5,flexWrap:"wrap"}}>
+        <span style={{color:t.muted,fontSize:11,fontWeight:600}}>DERIVED</span>
+        {derived.map(c=><span key={c} onClick={()=>onNav(c)} style={{color:t.mac,cursor:"pointer",fontSize:11,fontFamily:"'IBM Plex Mono',monospace",padding:"1px 7px",borderRadius:4,background:t.mac+"10",border:`1px solid ${t.mac}18`}}>{c}</span>)}
+      </div>}
+    </div>
+    <div style={{marginBottom:20,lineHeight:1.7}}><p style={{color:t.text,fontSize:14,marginBottom:4}}>{d.en}</p><p style={{color:t.muted,fontSize:13}}>{d.zh}</p></div>
+    {methods.length>0&&<div style={{marginBottom:22}}>
+      <h3 style={{color:t.gold,fontSize:13,fontWeight:600,marginBottom:10,letterSpacing:".04em"}}>METHODS</h3>
+      <div style={{background:t.card,border:`1px solid ${t.border}`,borderRadius:8,overflow:"hidden"}}>
+        {methods.map((m,i)=><div key={m.n} onClick={()=>onNav(cls,m.n)} style={{display:"grid",gridTemplateColumns:"60px 1fr",padding:"7px 14px",cursor:"pointer",borderBottom:i<methods.length-1?`1px solid ${t.border}`:"none",transition:"background .1s"}}
+          onMouseEnter={e=>e.currentTarget.style.background=t.hlBg} onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
+          <span style={{fontSize:9,fontWeight:700,fontFamily:"'IBM Plex Mono',monospace",color:m.kind==="task"?t.mac:t.kw,textTransform:"uppercase",padding:"2px 5px",borderRadius:3,background:(m.kind==="task"?t.mac:t.kw)+"10",display:"inline-block",textAlign:"center",alignSelf:"start",marginTop:2}}>{m.kind}</span>
+          <div><div style={{fontFamily:"'IBM Plex Mono',monospace",fontSize:12.5,color:t.uvm,marginBottom:1}}>{m.n}()</div><div style={{color:t.muted,fontSize:11.5}}>{m.d}</div></div>
+        </div>)}
+      </div>
+    </div>}
+    {d.pr.length>0&&<div style={{marginBottom:22}}>
+      <h3 style={{color:t.gold,fontSize:13,fontWeight:600,marginBottom:10,letterSpacing:".04em"}}>PROPERTIES</h3>
+      <div style={{background:t.card,border:`1px solid ${t.border}`,borderRadius:8,overflow:"hidden"}}>
+        {d.pr.map((p,i)=><div key={p.n} style={{padding:"7px 14px",borderBottom:i<d.pr.length-1?`1px solid ${t.border}`:"none"}}>
+          <span style={{fontFamily:"'IBM Plex Mono',monospace",fontSize:12.5,color:t.uvm}}>{p.n}</span>
+          <span style={{color:t.muted,fontSize:11.5,marginLeft:10}}>— {p.d}</span></div>)}
+      </div>
+    </div>}
+    <div style={{marginBottom:22}}>
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10,flexWrap:"wrap",gap:8}}>
+        <h3 style={{color:t.gold,fontSize:13,fontWeight:600,letterSpacing:".04em",margin:0}}>SOURCE CODE</h3>
+        <div style={{display:"flex",alignItems:"center",gap:10}}>
+          <span style={{color:t.dim,fontSize:11,fontFamily:"'IBM Plex Mono',monospace"}}>{d.f}</span>
+          <span onClick={()=>onViewFile(d.f)}
+            style={{display:"inline-flex",alignItems:"center",gap:4,color:t.acc2,fontSize:11,fontFamily:"'IBM Plex Mono',monospace",padding:"2px 8px",borderRadius:4,border:`1px solid ${t.acc2}30`,background:t.acc2+"08",transition:"all .15s",cursor:"pointer"}}
+            onMouseEnter={e=>{e.currentTarget.style.background=t.acc2+"18";e.currentTarget.style.borderColor=t.acc2+"55"}}
+            onMouseLeave={e=>{e.currentTarget.style.background=t.acc2+"08";e.currentTarget.style.borderColor=t.acc2+"30"}}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            查看完整源文件
+          </span>
+        </div>
+      </div>
+      <SrcView src={d.src} onNav={onNav} hlM={hlM} theme={theme}/>
+    </div>
+  </div>);
+}
+
+// ── Macro Detail ───────────────────────────────────────────────
+function MacDetail({name,theme,onViewFile}){
+  const t=TH[theme];const m=MAC[name];if(!m)return<div style={{padding:40,color:t.muted}}>Not found.</div>;
+  return(<div style={{maxWidth:"100%",animation:"fadeIn .2s ease"}}>
+    <div style={{background:`linear-gradient(135deg, ${t.mac}08 0%, ${t.gold}08 100%)`,border:`1px solid ${t.mac}18`,borderRadius:10,padding:"22px 26px",marginBottom:22}}>
+      <div style={{fontFamily:"'IBM Plex Mono',monospace",fontSize:20,fontWeight:700,color:t.mac,marginBottom:6}}>{m.nm}</div>
+      <div style={{color:t.muted,fontSize:12,fontFamily:"'IBM Plex Mono',monospace",marginBottom:6,display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>{m.f}
+        <span onClick={()=>onViewFile(m.f)}
+          style={{display:"inline-flex",alignItems:"center",gap:4,color:t.acc2,fontSize:10.5,padding:"1px 6px",borderRadius:3,border:`1px solid ${t.acc2}30`,background:t.acc2+"08",cursor:"pointer",transition:"all .15s"}}
+          onMouseEnter={e=>{e.currentTarget.style.background=t.acc2+"18";e.currentTarget.style.borderColor=t.acc2+"55"}}
+          onMouseLeave={e=>{e.currentTarget.style.background=t.acc2+"08";e.currentTarget.style.borderColor=t.acc2+"30"}}>
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          查看完整源文件
+        </span>
+      </div>
+      <span style={{color:t.gold,fontSize:10,padding:"2px 7px",borderRadius:4,background:t.gold+"10",border:`1px solid ${t.gold}18`}}>{m.cat}</span>
+    </div>
+    <div style={{marginBottom:20,lineHeight:1.7}}><p style={{color:t.text,fontSize:14,marginBottom:4}}>{m.en}</p><p style={{color:t.muted,fontSize:13}}>{m.zh}</p></div>
+    <div style={{marginBottom:20}}><h3 style={{color:t.gold,fontSize:13,fontWeight:600,marginBottom:10,letterSpacing:".04em"}}>USAGE</h3>
+      <div style={{background:t.code,border:`1px solid ${t.border}`,borderRadius:8,padding:14,fontFamily:"'IBM Plex Mono',monospace",fontSize:13,color:t.mac}}>{m.usage}</div></div>
+    <div style={{marginBottom:20}}><h3 style={{color:t.gold,fontSize:13,fontWeight:600,marginBottom:10,letterSpacing:".04em"}}>EXPANSION</h3>
+      <div style={{background:t.code,border:`1px solid ${t.border}`,borderRadius:8,padding:14,fontFamily:"'IBM Plex Mono',monospace",fontSize:12.5,color:t.cmt,whiteSpace:"pre-wrap",lineHeight:1.6}}>{m.exp}</div></div>
+  </div>);
+}
+
+// ── Search with Tabs ───────────────────────────────────────────
+function Search({q, onNav, theme}) {
+  const t=TH[theme];
+  const [tab, setTab] = useState("all");
+  const results = useMemo(()=>{
+    const ql=q.toLowerCase(),r=[];
+    CLS.forEach(cls=>{const d=D[cls];
+      if(cls.toLowerCase().includes(ql))r.push({tp:"class",cls,nm:cls,desc:d.en.slice(0,90)+"..."});
+      [...d.fn,...d.tk].forEach(m=>{if(m.n.toLowerCase().includes(ql))r.push({tp:"method",cls,nm:m.n,desc:m.d,kind:d.tk.includes(m)?"task":"function"})});
+      d.src.split("\n").forEach((ln,li)=>{if(ln.toLowerCase().includes(ql))r.push({tp:"src",cls,ln:li+1,line:ln.trim()})});
+    });
+    MACS.forEach(m=>{const md=MAC[m];if(md.nm.toLowerCase().includes(ql)||m.toLowerCase().includes(ql))r.push({tp:"macro",nm:m,desc:md.en.slice(0,90)+"..."})});
+    return r;
+  },[q]);
+
+  const filtered = tab==="all"?results:results.filter(r=>r.tp===tab);
+  const counts = {all:results.length,class:results.filter(r=>r.tp==="class").length,method:results.filter(r=>r.tp==="method").length,macro:results.filter(r=>r.tp==="macro").length,src:results.filter(r=>r.tp==="src").length};
+  const tabs = [{id:"all",l:"All"},{id:"class",l:"Classes"},{id:"method",l:"Methods"},{id:"macro",l:"Macros"},{id:"src",l:"Source"}];
+
+  return(<div style={{maxWidth:"100%",animation:"fadeIn .2s ease"}}>
+    <h2 style={{color:t.text,fontSize:18,fontWeight:600,marginBottom:8,fontFamily:"'IBM Plex Mono',monospace"}}>Search: "<span style={{color:t.acc}}>{q}</span>"</h2>
+    <div style={{display:"flex",gap:2,marginBottom:16,flexWrap:"wrap"}}>
+      {tabs.map(tb=><button key={tb.id} onClick={()=>setTab(tb.id)} style={{padding:"5px 12px",borderRadius:5,border:`1px solid ${tab===tb.id?t.acc+"44":t.border}`,background:tab===tb.id?t.acc+"12":"transparent",color:tab===tb.id?t.acc:t.muted,fontSize:11,fontFamily:"'IBM Plex Mono',monospace",fontWeight:600,cursor:"pointer"}}>{tb.l} <span style={{opacity:.6}}>({counts[tb.id]})</span></button>)}
+    </div>
+    {filtered.length===0&&<div style={{color:t.dim,padding:20}}>No results.</div>}
+    {filtered.slice(0,50).map((r,i)=><div key={i} onClick={()=>r.tp==="macro"?onNav(null,null,r.nm):r.tp==="method"?onNav(r.cls,r.nm):onNav(r.cls)}
+      style={{padding:"9px 14px",cursor:"pointer",borderBottom:`1px solid ${t.border}`,transition:"background .1s"}}
+      onMouseEnter={e=>e.currentTarget.style.background=t.hlBg} onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
+      <div style={{display:"flex",alignItems:"center",gap:7,marginBottom:2}}>
+        <span style={{fontSize:9,fontWeight:700,color:r.tp==="class"?t.acc2:r.tp==="method"?t.kw:r.tp==="macro"?t.mac:t.dim,padding:"1px 5px",borderRadius:3,background:(r.tp==="class"?t.acc2:r.tp==="method"?t.kw:r.tp==="macro"?t.mac:t.dim)+"12",textTransform:"uppercase",fontFamily:"'IBM Plex Mono',monospace"}}>{r.tp==="method"?r.kind:r.tp}</span>
+        <span style={{fontFamily:"'IBM Plex Mono',monospace",fontSize:12.5,color:t.acc}}>{r.cls||""}{r.tp==="method"?` :: ${r.nm}()`:r.tp==="macro"?MAC[r.nm]?.nm:""}</span>
+        {r.ln&&<span style={{color:t.dim,fontSize:10}}>:{r.ln}</span>}
+      </div>
+      <div style={{color:t.muted,fontSize:11.5,fontFamily:r.tp==="src"?"'IBM Plex Mono',monospace":"inherit"}}>{r.tp==="src"?r.line:r.desc}</div>
+    </div>)}
+  </div>);
+}
+
+// ── Nav Tree ───────────────────────────────────────────────────
+function NavTree({active,onSelect,tab,theme}){
+  const t=TH[theme];
+  const [oc,setOc]=useState(()=>{const o={};CO.forEach(c=>o[c]=true);return o});
+  const [ocl,setOcl]=useState({});
+  const [hc,setHc]=useState({});
+  const tc=c=>setOc(p=>({...p,[c]:!p[c]}));
+  const tcl=c=>setOcl(p=>({...p,[c]:!p[c]}));
+
+  function TreeN({nm,dp}){
+    const ch=der(nm);const isA=active===nm;
+    return(<div>
+      <div style={{display:"flex",alignItems:"center",gap:3,paddingLeft:dp*13+8,padding:`2px 6px 2px ${dp*13+8}px`,cursor:"pointer",background:isA?t.actBg:"transparent",borderLeft:isA?`2px solid ${t.acc}`:"2px solid transparent",transition:"all .1s"}}
+        onClick={()=>onSelect(nm)} onMouseEnter={e=>{if(!isA)e.currentTarget.style.background=t.hovBg}} onMouseLeave={e=>{if(!isA)e.currentTarget.style.background=isA?t.actBg:"transparent"}}>
+        {ch.length>0?<span onClick={e=>{e.stopPropagation();setHc(p=>({...p,[nm]:!p[nm]}))}} style={{fontSize:8,color:t.dim,width:11,textAlign:"center",flexShrink:0,userSelect:"none"}}>{hc[nm]?"▶":"▼"}</span>:<span style={{width:11}}/>}
+        <span style={{fontSize:11.5,fontFamily:"'IBM Plex Mono',monospace",color:isA?t.acc:t.text,fontWeight:isA?600:400,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{nm}</span>
+      </div>
+      {!hc[nm]&&ch.map(c=><TreeN key={c} nm={c} dp={dp+1}/>)}
+    </div>);
+  }
+
+  if(tab==="hierarchy")return<div style={{padding:"6px 0"}}><TreeN nm="uvm_void" dp={0}/></div>;
+
+  if(tab==="macros")return(<div style={{fontSize:11.5,fontFamily:"'IBM Plex Mono',monospace"}}>
+    {CO.filter(c=>MCATS[c]).map(cat=>(<div key={cat}>
+      <div onClick={()=>tc("m_"+cat)} style={{padding:"5px 10px",cursor:"pointer",display:"flex",alignItems:"center",gap:5,fontWeight:600,fontSize:10.5,textTransform:"uppercase",letterSpacing:".04em",borderBottom:`1px solid ${t.border}`,color:t.text}}>
+        <span style={{fontSize:8,color:t.dim}}>{oc["m_"+cat]!==false?"▼":"▶"}</span><span style={{color:t.gold}}>{cat}</span></div>
+      {oc["m_"+cat]!==false&&MCATS[cat].map(m=>(<div key={m} onClick={()=>onSelect(null,null,m)} style={{padding:"2px 10px 2px 22px",cursor:"pointer",display:"flex",alignItems:"center",gap:3,color:t.mac}}
+        onMouseEnter={e=>e.currentTarget.style.background=t.hovBg} onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
+        <span style={{color:t.mac,fontSize:9,fontWeight:700}}>M</span><span style={{fontSize:11}}>{MAC[m].nm}</span></div>))}
+    </div>))}
+  </div>);
+
+  return(<div style={{fontSize:11.5,fontFamily:"'IBM Plex Mono',monospace"}}>
+    {CO.filter(c=>CATS[c]).map(cat=>(<div key={cat}>
+      <div onClick={()=>tc(cat)} style={{padding:"5px 10px",cursor:"pointer",display:"flex",alignItems:"center",gap:5,fontWeight:600,fontSize:10.5,textTransform:"uppercase",letterSpacing:".04em",borderBottom:`1px solid ${t.border}`,color:t.text}}>
+        <span style={{fontSize:8,color:t.dim}}>{oc[cat]?"▼":"▶"}</span><span style={{color:t.gold}}>{cat}</span>
+        <span style={{color:t.dim,fontWeight:400,fontSize:9.5,marginLeft:"auto"}}>{CATS[cat].length}</span></div>
+      {oc[cat]&&CATS[cat].map(cls=>{const d=D[cls],isA=active===cls,isO=ocl[cls];
+        const ms=[...d.fn.map(m=>({...m,k:"fn"})),...d.tk.map(m=>({...m,k:"tk"}))];
+        return(<div key={cls}>
+          <div style={{display:"flex",alignItems:"center",gap:3,padding:"2px 10px 2px 18px",cursor:"pointer",background:isA?t.actBg:"transparent",borderLeft:isA?`2px solid ${t.acc}`:"2px solid transparent"}}
+            onClick={()=>onSelect(cls)} onMouseEnter={e=>{if(!isA)e.currentTarget.style.background=t.hovBg}} onMouseLeave={e=>e.currentTarget.style.background=isA?t.actBg:"transparent"}>
+            {ms.length>0?<span onClick={e=>{e.stopPropagation();tcl(cls)}} style={{fontSize:8,color:t.dim,width:11,textAlign:"center",flexShrink:0}}>{isO?"▼":"▶"}</span>:<span style={{width:11}}/>}
+            <span style={{color:t.acc2,fontSize:9}}>◆</span>
+            <span style={{color:isA?t.acc:t.text,fontWeight:isA?600:400}}>{cls}</span></div>
+          {isO&&ms.map(m=>(<div key={m.n} onClick={()=>onSelect(cls,m.n)} style={{padding:"1px 10px 1px 40px",cursor:"pointer",display:"flex",alignItems:"center",gap:3,color:t.uvm}}
+            onMouseEnter={e=>e.currentTarget.style.background=t.hovBg} onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
+            <span style={{color:m.k==="tk"?t.mac:t.kw,fontSize:8,fontWeight:700}}>{m.k==="tk"?"T":"F"}</span>
+            <span style={{fontSize:10.5}}>{m.n}()</span></div>))}
+        </div>)})}
+    </div>))}
+  </div>);
+}
+
+// ── Home ───────────────────────────────────────────────────────
+function Home({onNav,theme}){
+  const t=TH[theme];
+  const totalM=CLS.reduce((s,c)=>s+D[c].fn.length+D[c].tk.length,0);
+  return(<div style={{maxWidth:"100%",animation:"fadeIn .25s ease"}}>
+    <div style={{textAlign:"center",padding:"36px 0 20px"}}>
+      <h1 style={{fontFamily:"'IBM Plex Mono',monospace",fontSize:32,fontWeight:700,background:`linear-gradient(135deg, ${t.acc}, ${t.acc2})`,WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",marginBottom:8}}>UVM 1.2 Reference</h1>
+      <p style={{color:t.muted,fontSize:14,maxWidth:520,margin:"0 auto",lineHeight:1.6}}>Interactive source code browser for the Universal Verification Methodology.<br/>Navigate classes, explore inheritance, cross-reference methods and macros.</p>
+      <div style={{display:"flex",justifyContent:"center",gap:6,marginTop:12,flexWrap:"wrap"}}>
+        {[{k:"Ctrl+K",l:"Search"},{k:"Ctrl+B",l:"Sidebar"},{k:"Alt+←/→",l:"History"}].map(s=>
+          <span key={s.k} style={{color:t.dim,fontSize:12}}>
+            <kbd style={{padding:"2px 5px",borderRadius:3,border:`1px solid ${t.border}`,background:t.code,color:t.muted,fontSize:10.5,fontFamily:"'IBM Plex Mono',monospace"}}>{s.k}</kbd> {s.l}
+          </span>)}
+      </div>
+    </div>
+    <div style={{display:"flex",justifyContent:"center",gap:24,marginBottom:24}}>
+      {[{n:CLS.length,l:"Classes"},{n:totalM,l:"Methods"},{n:MACS.length,l:"Macros"}].map(s=>
+        <div key={s.l} style={{textAlign:"center"}}><div style={{fontSize:26,fontWeight:700,fontFamily:"'IBM Plex Mono',monospace",color:t.acc}}>{s.n}</div><div style={{fontSize:11,color:t.muted}}>{s.l}</div></div>)}
+    </div>
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill, minmax(190px, 1fr))",gap:10}}>
+      {CO.filter(c=>CATS[c]).map(cat=>(<div key={cat} style={{background:t.card,border:`1px solid ${t.border}`,borderRadius:8,padding:14}}>
+        <h3 style={{color:t.gold,fontSize:12,fontWeight:600,marginBottom:8,letterSpacing:".03em"}}>{cat}</h3>
+        {CATS[cat].map(cls=><div key={cls} onClick={()=>onNav(cls)} style={{fontFamily:"'IBM Plex Mono',monospace",fontSize:11.5,color:t.acc,padding:"2px 0",cursor:"pointer"}}
+          onMouseEnter={e=>e.currentTarget.style.color=t.acc2} onMouseLeave={e=>e.currentTarget.style.color=t.acc}>{cls}</div>)}
+      </div>))}
+      <div style={{background:t.card,border:`1px solid ${t.border}`,borderRadius:8,padding:14}}>
+        <h3 style={{color:t.gold,fontSize:12,fontWeight:600,marginBottom:8,letterSpacing:".03em"}}>Macros</h3>
+        {MACS.map(m=><div key={m} onClick={()=>onNav(null,null,m)} style={{fontFamily:"'IBM Plex Mono',monospace",fontSize:11.5,color:t.mac,padding:"2px 0",cursor:"pointer"}}
+          onMouseEnter={e=>e.currentTarget.style.opacity=".7"} onMouseLeave={e=>e.currentTarget.style.opacity="1"}>{MAC[m].nm}</div>)}
+      </div>
+    </div>
+
+    {/* Source Attribution */}
+    <div style={{marginTop:36,padding:"20px 24px",background:t.card,border:`1px solid ${t.border}`,borderRadius:10}}>
+      <h3 style={{color:t.gold,fontSize:13,fontWeight:600,marginBottom:10,letterSpacing:".03em"}}>SOURCE &amp; REFERENCES</h3>
+      <div style={{fontSize:12.5,lineHeight:1.8,color:t.muted}}>
+        <p style={{marginBottom:8}}>本站源码内容基于以下开源资源整理：</p>
+        <div style={{display:"flex",flexDirection:"column",gap:6}}>
+          {[
+            {label:"UVM 1.2 Class Library",url:"https://accellera.org/downloads/standards/uvm",desc:"Accellera Systems Initiative 发布的 UVM 1.2 标准源码 (IEEE 1800.2)"},
+            {label:"UVM 1.2 Source (GitHub Mirror)",url:"https://github.com/accellera-official/uvm-core",desc:"Accellera 官方 UVM 核心源码仓库"},
+            {label:"UVM 1.2 Reference Manual",url:"https://verificationacademy.com/resource-library",desc:"Siemens / Verification Academy 提供的 UVM 参考手册与教程"},
+            {label:"IEEE 1800.2-2017",url:"https://standards.ieee.org/standard/1800_2-2017.html",desc:"IEEE UVM 标准规范 (Standard for Universal Verification Methodology)"},
+          ].map(ref=>(
+            <div key={ref.label} style={{display:"flex",alignItems:"baseline",gap:8,padding:"4px 0"}}>
+              <span style={{color:t.acc,flexShrink:0,fontSize:12}}>▸</span>
+              <div>
+                <span style={{fontFamily:"'IBM Plex Mono',monospace",color:t.acc2,fontWeight:500,fontSize:12}}>{ref.label}</span>
+                <span style={{color:t.dim,fontSize:11,marginLeft:8}}>{ref.url}</span>
+                <div style={{color:t.muted,fontSize:11.5,marginTop:1}}>{ref.desc}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div style={{marginTop:14,paddingTop:12,borderTop:`1px solid ${t.border}`,fontSize:11.5,color:t.dim}}>
+          <p>UVM (Universal Verification Methodology) 由 Accellera Systems Initiative 开发，基于 Apache 2.0 开源许可证。</p>
+          <p style={{marginTop:4}}>本站为非官方参考工具，源码内容仅供学习交流，以官方发布版本为准。</p>
+          <p style={{marginTop:4}}>Copyright © 2014 Accellera Systems Initiative. All rights reserved.</p>
+        </div>
+      </div>
+    </div>
+  </div>);
+}
+
+// ── App ────────────────────────────────────────────────────────
+function App(){
+  const [theme,setTheme]=useState("dark");
+  const [winW, setWinW]=useState(typeof window!=="undefined"?window.innerWidth:1200);
+  const isMobile = winW < 768;
+  const [sideO,setSideO]=useState(!isMobile);
+  const [sideT,setSideT]=useState("tree");
+  const [searchQ,setSearchQ]=useState("");
+  const [searching,setSearching]=useState(false);
+  const [viewFile,setViewFile]=useState(null);
+  const searchRef=useRef(null);
+  const hist=useHistory();
+  const t=TH[theme];
+
+  const nav=useCallback((cls,method,macro)=>{
+    if(macro)hist.push({type:"macro",macro});
+    else if(cls)hist.push({type:"class",cls,method:method||null});
+    else hist.push({type:"home"});
+    setSearching(false);setSearchQ("");
+    if(isMobile) setSideO(false);
+  },[hist,isMobile]);
+
+  // Responsive: track window width
+  useEffect(()=>{
+    const onResize=()=>setWinW(window.innerWidth);
+    window.addEventListener("resize",onResize);
+    return()=>window.removeEventListener("resize",onResize);
+  },[]);
+
+  const doSearch=q=>{if(q.trim()){setSearching(true)}else setSearching(false)};
+
+  useEffect(()=>{const h=e=>{
+    if((e.ctrlKey||e.metaKey)&&e.key==="k"){e.preventDefault();searchRef.current?.focus()}
+    if((e.ctrlKey||e.metaKey)&&e.key==="b"){e.preventDefault();setSideO(p=>!p)}
+    if(e.altKey&&e.key==="ArrowLeft"){e.preventDefault();hist.back()}
+    if(e.altKey&&e.key==="ArrowRight"){e.preventDefault();hist.fwd()}
+    if(e.key==="Escape"){searchRef.current?.blur();if(searching){setSearching(false);setSearchQ("")}}
+  };window.addEventListener("keydown",h);return()=>window.removeEventListener("keydown",h)},[searching,hist]);
+
+  const cur=hist.cur;
+  const activeCls=!searching&&cur.type==="class"?cur.cls:null;
+  const activeMacro=!searching&&cur.type==="macro"?cur.macro:null;
+  const hlMethod=cur.method||null;
+
+  const crumbs=[];
+  if(activeCls){const d=D[activeCls];crumbs.push({l:"UVM 1.2",a:()=>nav()});crumbs.push({l:d?.cat||""});crumbs.push({l:activeCls,a:()=>nav(activeCls)});if(hlMethod)crumbs.push({l:hlMethod+"()"})}
+  else if(activeMacro){crumbs.push({l:"UVM 1.2",a:()=>nav()});crumbs.push({l:"Macros"});crumbs.push({l:MAC[activeMacro]?.nm||activeMacro})}
+  else if(searching){crumbs.push({l:"UVM 1.2",a:()=>{nav();setSearching(false)}});crumbs.push({l:"Search"})}
+
+  const tabs=[{id:"tree",l:"Navigate"},{id:"hierarchy",l:"Hierarchy"},{id:"macros",l:"Macros"}];
+
+  const sideW = isMobile ? (sideO ? "85vw" : 0) : (sideO ? 272 : 0);
+  const sideMinW = isMobile ? (sideO ? "85vw" : 0) : (sideO ? 272 : 0);
+
+  return(<div style={{display:"flex",height:"100vh",width:"100vw",background:t.bg,color:t.text,fontFamily:"'Segoe UI','Noto Sans SC',system-ui,sans-serif",overflow:"hidden",position:"relative"}}>
+
+    {/* Mobile overlay backdrop */}
+    {isMobile && sideO && <div onClick={()=>setSideO(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",zIndex:90,transition:"opacity .2s"}}/>}
+
+    {/* Sidebar */}
+    <div style={{width:sideW,minWidth:sideMinW,maxWidth:isMobile?"85vw":320,height:"100vh",background:t.sidebar,borderRight:`1px solid ${t.border}`,display:"flex",flexDirection:"column",transition:"width .22s cubic-bezier(.4,0,.2,1), min-width .22s cubic-bezier(.4,0,.2,1)",overflow:"hidden",flexShrink:0,position:isMobile?"fixed":"relative",left:0,top:0,zIndex:isMobile?100:"auto"}}>
+      <div style={{padding:"9px 12px",display:"flex",alignItems:"center",justifyContent:"space-between",borderBottom:`1px solid ${t.border}`,flexShrink:0}}>
+        <span onClick={()=>nav()} style={{fontFamily:"'IBM Plex Mono',monospace",fontWeight:700,fontSize:13,color:t.acc,cursor:"pointer"}}>UVM 1.2</span>
+        <div style={{display:"flex",gap:4,alignItems:"center"}}>
+          <button onClick={()=>setTheme(p=>p==="dark"?"light":"dark")} style={{background:"none",border:`1px solid ${t.border}`,color:t.muted,cursor:"pointer",fontSize:12,padding:"1px 5px",borderRadius:4}} title="Toggle theme">{theme==="dark"?"☀":"☾"}</button>
+          <button onClick={()=>setSideO(false)} style={{background:"none",border:"none",color:t.dim,cursor:"pointer",fontSize:13,padding:"1px 5px"}} onMouseEnter={e=>e.currentTarget.style.color=t.muted} onMouseLeave={e=>e.currentTarget.style.color=t.dim}>✕</button>
+        </div>
+      </div>
+      <div style={{display:"flex",borderBottom:`1px solid ${t.border}`,flexShrink:0}}>
+        {tabs.map(tb=><button key={tb.id} onClick={()=>setSideT(tb.id)} style={{flex:1,padding:"6px 0",border:"none",cursor:"pointer",fontSize:10.5,fontFamily:"'IBM Plex Mono',monospace",fontWeight:600,background:"transparent",color:sideT===tb.id?t.acc:t.dim,borderBottom:sideT===tb.id?`2px solid ${t.acc}`:"2px solid transparent",transition:"all .1s"}}>{tb.l}</button>)}
+      </div>
+      {sideT==="hierarchy"?<HierDiagram active={activeCls} onSelect={cls=>nav(cls)} theme={theme}/>:
+        <div style={{flex:1,overflow:"auto",paddingTop:3}}><NavTree active={activeCls} onSelect={(cls,m,mac)=>nav(cls,m,mac)} tab={sideT} theme={theme}/></div>}
+      <div style={{padding:8,borderTop:`1px solid ${t.border}`,flexShrink:0}}>
+        <div style={{position:"relative"}}>
+          <span style={{position:"absolute",left:9,top:"50%",transform:"translateY(-50%)",color:t.dim,fontSize:12}}>⌕</span>
+          <input ref={searchRef} value={searchQ} onChange={e=>{setSearchQ(e.target.value);doSearch(e.target.value)}} onKeyDown={e=>{if(e.key==="Enter")doSearch(searchQ)}}
+            placeholder="Search... (Ctrl+K)" style={{width:"100%",boxSizing:"border-box",padding:"7px 9px 7px 28px",background:t.input,border:`1px solid ${t.border}`,borderRadius:5,color:t.text,fontSize:11.5,fontFamily:"'IBM Plex Mono',monospace",outline:"none"}}
+            onFocus={e=>e.currentTarget.style.borderColor=t.acc+"55"} onBlur={e=>e.currentTarget.style.borderColor=t.border}/>
+        </div>
+      </div>
+    </div>
+
+    {/* Main */}
+    <div style={{flex:1,display:"flex",flexDirection:"column",overflow:"hidden"}}>
+      <div style={{height:42,flexShrink:0,display:"flex",alignItems:"center",padding:"0 16px",gap:8,borderBottom:`1px solid ${t.border}`,background:t.header}}>
+        {!sideO&&<button onClick={()=>setSideO(true)} style={{background:"none",border:`1px solid ${t.border}`,color:t.muted,cursor:"pointer",fontSize:15,padding:"2px 7px",borderRadius:4,fontFamily:"monospace"}} onMouseEnter={e=>e.currentTarget.style.color=t.text} onMouseLeave={e=>e.currentTarget.style.color=t.muted}>☰</button>}
+        {/* History nav */}
+        <div style={{display:"flex",gap:2}}>
+          <button onClick={hist.back} disabled={!hist.canBack} style={{background:"none",border:`1px solid ${t.border}`,color:hist.canBack?t.muted:t.dim,cursor:hist.canBack?"pointer":"default",fontSize:12,padding:"2px 7px",borderRadius:4,opacity:hist.canBack?1:.4}} title="Back (Alt+←)">←</button>
+          <button onClick={hist.fwd} disabled={!hist.canFwd} style={{background:"none",border:`1px solid ${t.border}`,color:hist.canFwd?t.muted:t.dim,cursor:hist.canFwd?"pointer":"default",fontSize:12,padding:"2px 7px",borderRadius:4,opacity:hist.canFwd?1:.4}} title="Forward (Alt+→)">→</button>
+        </div>
+        {!sideO&&<button onClick={()=>setTheme(p=>p==="dark"?"light":"dark")} style={{background:"none",border:`1px solid ${t.border}`,color:t.muted,cursor:"pointer",fontSize:12,padding:"2px 7px",borderRadius:4}}>{theme==="dark"?"☀":"☾"}</button>}
+        <div style={{display:"flex",alignItems:"center",gap:3,fontSize:11.5,marginLeft:4}}>
+          {crumbs.length===0&&<span style={{color:t.muted,fontFamily:"'IBM Plex Mono',monospace"}}>UVM 1.2 Reference</span>}
+          {crumbs.map((b,i)=><span key={i} style={{display:"flex",alignItems:"center",gap:3}}>
+            {i>0&&<span style={{color:t.dim}}>›</span>}
+            <span onClick={b.a||undefined} style={{color:i===crumbs.length-1?t.text:t.muted,cursor:b.a?"pointer":"default",fontFamily:"'IBM Plex Mono',monospace"}}>{b.l}</span>
+          </span>)}
+        </div>
+      </div>
+      <div style={{flex:1,overflow:"auto",padding:isMobile?"16px 12px":"20px 28px"}}>
+        {searching?<Search q={searchQ} onNav={nav} theme={theme}/>:
+         activeCls?<ClsDetail cls={activeCls} onNav={nav} hlM={hlMethod} theme={theme} onViewFile={setViewFile}/>:
+         activeMacro?<MacDetail name={activeMacro} theme={theme} onViewFile={setViewFile}/>:
+         <Home onNav={nav} theme={theme}/>}
+      </div>
+    </div>
+
+    {/* Full Source File Modal */}
+    {viewFile && <FullSrcModal filePath={viewFile} onClose={()=>setViewFile(null)} theme={theme}/>}
+
+    <style>{`
+      *{margin:0;padding:0;box-sizing:border-box}
+      ::-webkit-scrollbar{width:5px;height:5px}
+      ::-webkit-scrollbar-track{background:transparent}
+      ::-webkit-scrollbar-thumb{background:${t.scroll};border-radius:3px}
+      ::-webkit-scrollbar-thumb:hover{background:${t.border}}
+      input::placeholder{color:${t.dim}}
+      @keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+    `}</style>
+  </div>);
+}
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(React.createElement(App));
+  </script>
+</body>
+</html>
